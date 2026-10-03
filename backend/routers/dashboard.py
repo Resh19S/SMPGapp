@@ -12,6 +12,7 @@ from models.schemas import (
     AgeingBucket,
     DashboardSummaryOut,
     DecisionItem,
+    NavCounts,
     FollowUpEntry,
     MoveEntry,
     UpcomingEvent,
@@ -319,4 +320,26 @@ def get_dashboard(db: Session = Depends(get_db), _user: StaffUser = Depends(get_
         moveOutsToday=move_outs_today,
         followUpsToday=follow_ups_today,
         rentOverdueCount=len(overdue),
+        vacantRentPerMonth=sum(b.rentAmount for b in beds if b.status == "vacant"),
+    )
+
+
+@router.get("/dashboard/counts", response_model=NavCounts)
+def nav_counts(db: Session = Depends(get_db), _user: StaffUser = Depends(get_current_user)):
+    """Small numbers for the sidebar badges."""
+    today = clock.today()
+    ensure_payments_up_to_date(db, today)
+    overdue = [p for p in db.query(Payment).all() if payment_status(p, today) == "overdue"]
+    urgent = db.query(Complaint).filter(Complaint.status != "resolved", Complaint.priority == "urgent").count()
+    soon = today + datetime.timedelta(days=30)
+    renewals = sum(
+        1
+        for t in db.query(Tenant).filter(Tenant.move_out_date.is_(None), Tenant.agreement_expiry <= soon).all()
+        if t.notice is None
+    )
+    return NavCounts(
+        openItems=len(_decision_queue(db, today, overdue)),
+        overdueResidents=len({p.tenant_id for p in overdue}),
+        urgentComplaints=urgent,
+        renewalsDue=renewals,
     )

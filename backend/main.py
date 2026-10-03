@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from auth import JWT_SECRET
 from database import Base, engine
-from routers import auth, dashboard, leads, operations, payments, pnl, properties, staff, tenants
+from routers import auth, dashboard, leads, operations, payments, pnl, properties, search, staff, tenants
 
 logger = logging.getLogger("pg_rental")
 
@@ -64,6 +64,7 @@ app.include_router(tenants.router)
 app.include_router(payments.router)
 app.include_router(operations.router)
 app.include_router(pnl.router)
+app.include_router(search.router)
 app.include_router(dashboard.router)
 
 

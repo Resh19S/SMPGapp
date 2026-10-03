@@ -6,6 +6,7 @@ import { StatusBadge } from "../components/common/StatusBadge";
 import formStyles from "../components/common/Form.module.css";
 import tableStyles from "../components/common/Table.module.css";
 import pageStyles from "./PageLayout.module.css";
+import { ResetPasswordModal } from "../components/staff/ResetPasswordModal";
 
 export function StaffPage() {
   const [staff, setStaff] = useState<StaffUser[]>([]);
@@ -43,6 +44,8 @@ export function StaffPage() {
     }
   }
 
+  const [resetting, setResetting] = useState<StaffUser | null>(null);
+
   async function handleDeactivate(member: StaffUser) {
     if (!window.confirm(`Deactivate ${member.name}? They will be signed out and can't log in again.`)) return;
     setError(null);
@@ -79,9 +82,14 @@ export function StaffPage() {
                 <td><StatusBadge tone={s.isActive ? "occupied" : "lost"} label={s.isActive ? "active" : "deactivated"} /></td>
                 <td>
                   {s.isActive && s.role !== "owner" && (
-                    <button className={tableStyles.actionButton} onClick={() => handleDeactivate(s)}>
-                      Deactivate
-                    </button>
+                    <div className={tableStyles.rowActions}>
+                      <button className={tableStyles.actionButton} onClick={() => setResetting(s)}>
+                        Reset password
+                      </button>
+                      <button className={tableStyles.actionButton} onClick={() => handleDeactivate(s)}>
+                        Deactivate
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -116,6 +124,7 @@ export function StaffPage() {
           {isSubmitting ? "Creating…" : "Create account"}
         </button>
       </div>
+      {resetting && <ResetPasswordModal member={resetting} onClose={() => setResetting(null)} />}
     </div>
   );
 }

@@ -13,6 +13,11 @@ import type {
   LeadSource,
   LeadStatus,
   LoginResponse,
+  NavCounts,
+  Receipt,
+  SearchResult,
+  TenantImportResult,
+  TenantImportRow,
   ManualPaymentMethod,
   MoveOutNotice,
   PaymentTransaction,
@@ -86,6 +91,11 @@ export function fetchMe(): Promise<StaffUser> {
   return request("/auth/me");
 }
 
+/** Returns a fresh token: other sessions of this account are signed out. */
+export function changePassword(currentPassword: string, newPassword: string): Promise<LoginResponse> {
+  return request("/auth/change-password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) });
+}
+
 // ---- Staff (owner only) ----
 
 export function listStaff(): Promise<StaffUser[]> {
@@ -98,6 +108,10 @@ export function createStaff(data: { name: string; username: string; password: st
 
 export function deactivateStaff(staffId: number): Promise<StaffUser> {
   return request(`/staff/${staffId}/deactivate`, { method: "PATCH" });
+}
+
+export function resetStaffPassword(staffId: number, newPassword: string): Promise<StaffUser> {
+  return request(`/staff/${staffId}/reset-password`, { method: "POST", body: JSON.stringify({ newPassword }) });
 }
 
 /** Active staff names for assigning work — available to every role. */
@@ -122,6 +136,16 @@ export function listBeds(propertyId?: number): Promise<Bed[]> {
 
 export function createBed(data: { propertyId: number; roomNumber: string; bedLabel: string; rentAmount: number }): Promise<Bed> {
   return request("/beds", { method: "POST", body: JSON.stringify(data) });
+}
+
+export function createBedsBulk(data: {
+  propertyId: number;
+  floor: number | null;
+  roomNumbers: string[];
+  bedLabels: string[];
+  rentAmount: number;
+}): Promise<Bed[]> {
+  return request("/beds/bulk", { method: "POST", body: JSON.stringify(data) });
 }
 
 export function updateBed(bedId: number, data: Partial<{ roomNumber: string; bedLabel: string; rentAmount: number }>): Promise<Bed> {
@@ -175,6 +199,11 @@ export function giveNotice(tenantId: number, noticeDate: string, plannedMoveOutD
   });
 }
 
+/** dryRun=true checks every row and writes nothing. */
+export function importTenants(rows: TenantImportRow[], dryRun: boolean): Promise<TenantImportResult> {
+  return request(`/tenants/import?dryRun=${dryRun}`, { method: "POST", body: JSON.stringify({ rows }) });
+}
+
 export function renewAgreement(
   tenantId: number,
   data: { newExpiry: string; newRent: number; effectiveFrom: string }
@@ -211,6 +240,10 @@ export function recordPayment(
     body: JSON.stringify(data),
     headers: { "Idempotency-Key": idempotencyKey },
   });
+}
+
+export function fetchReceipt(transactionId: number): Promise<Receipt> {
+  return request(`/payments/transactions/${transactionId}`);
 }
 
 export function fetchRentSummary(periodMonth: string | null): Promise<RentSummary> {
@@ -279,6 +312,14 @@ export function settleMoveOut(noticeId: number, refundPaidDate: string): Promise
 
 export function fetchDashboard(): Promise<DashboardSummary> {
   return request("/dashboard");
+}
+
+export function fetchNavCounts(): Promise<NavCounts> {
+  return request("/dashboard/counts");
+}
+
+export function search(q: string): Promise<SearchResult[]> {
+  return request(`/search?q=${encodeURIComponent(q)}`);
 }
 
 // ---- Profit & loss (owner only) ----

@@ -4,6 +4,7 @@ import type { Expense, ExpenseCategory, ProfitAndLoss } from "../types/contract"
 import { StatTile } from "../components/common/StatTile";
 import { NetTrendChart } from "../components/pnl/NetTrendChart";
 import { currentMonthISO, formatDate, inr, inrCompact, monthLabel, shiftPeriod, todayISO } from "../lib/format";
+import { downloadCsv } from "../lib/csv";
 import formStyles from "../components/common/Form.module.css";
 import pageStyles from "./PageLayout.module.css";
 import styles from "./ProfitLossPage.module.css";
@@ -94,6 +95,17 @@ export function ProfitLossPage() {
 
   const delta = pnl?.previous ? pnl.net - pnl.previous.net : null;
 
+  function exportCsv() {
+    if (!pnl) return;
+    downloadCsv(`profit-and-loss-${pnl.periodMonth}`, ["Section", "Item", "Date", "Paid to", "Amount (₹)"], [
+      ...pnl.incomeLines.map((l) => ["Income", l.label, "", "", l.amount]),
+      ["Income", "Total income", "", "", pnl.incomeTotal],
+      ...expenses.map((x) => ["Expense", `${CATEGORY_LABEL[x.category]}${x.description ? ` — ${x.description}` : ""}`, formatDate(x.spentOn), x.paidTo, x.amount]),
+      ["Expense", "Total expenses", "", "", pnl.expenseTotal],
+      [pnl.net < 0 ? "Net loss" : "Net profit", monthLabel(pnl.periodMonth), "", "", pnl.net],
+    ]);
+  }
+
   return (
     <div>
       <div className={pageStyles.header}>
@@ -101,11 +113,16 @@ export function ProfitLossPage() {
           <h1 className={pageStyles.title}>Profit &amp; Loss</h1>
           <p className={pageStyles.subtitle}>Owner only. Money that actually came in against what went out — deposits aren't income until they're kept.</p>
         </div>
-        <select className={styles.select} value={period} onChange={(e) => setPeriod(e.target.value)} aria-label="Month">
-          {months.map((m) => (
-            <option key={m} value={m}>{monthLabel(m)}</option>
-          ))}
-        </select>
+        <div className={pageStyles.headerActions}>
+          <button className={pageStyles.secondaryAction} onClick={exportCsv} disabled={!pnl}>
+            Export to Excel
+          </button>
+          <select className={styles.select} value={period} onChange={(e) => setPeriod(e.target.value)} aria-label="Month">
+            {months.map((m) => (
+              <option key={m} value={m}>{monthLabel(m)}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {error && <p className={pageStyles.error}>{error}</p>}

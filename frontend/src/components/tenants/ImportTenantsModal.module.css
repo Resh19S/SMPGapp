@@ -1,0 +1,68 @@
+.steps {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  padding-left: var(--space-5);
+  margin-bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-teal);
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+.filePick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  cursor: pointer;
+}
+
+.filePick input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.filePick:focus-within span:first-of-type { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+
+.fileName {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ok, .bad {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  margin: var(--space-2) 0;
+}
+
+.ok { color: var(--color-status-paid); }
+.bad { color: var(--color-status-overdue); }
+
+.preview {
+  max-height: 280px;
+  overflow: auto;
+}
+
+.rowBad { background: var(--color-status-overdue-tint); }
+
+.problem {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  min-width: 220px;
+}

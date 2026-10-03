@@ -1,9 +1,19 @@
+import { Link } from "react-router-dom";
 import type { RentRecord } from "../../types/contract";
 import { StatusBadge } from "../common/StatusBadge";
 import { formatDate, inr } from "../../lib/format";
+import { rentReminderText, whatsappLink } from "../../lib/whatsapp";
 import styles from "../common/Table.module.css";
 
-export function RentTable({ records, onRecordPayment }: { records: RentRecord[]; onRecordPayment: (record: RentRecord) => void }) {
+export function RentTable({
+  records,
+  propertyName,
+  onRecordPayment,
+}: {
+  records: RentRecord[];
+  propertyName: string;
+  onRecordPayment: (record: RentRecord) => void;
+}) {
   if (records.length === 0) {
     return <p className={styles.empty}>No rent records for this filter.</p>;
   }
@@ -40,11 +50,29 @@ export function RentTable({ records, onRecordPayment }: { records: RentRecord[];
                 <td className={styles.mono}>{formatDate(r.paidDate)}</td>
                 <td><StatusBadge tone={r.status} label={r.status} /></td>
                 <td>
-                  {r.status !== "paid" && (
-                    <button className={styles.actionButton} onClick={() => onRecordPayment(r)}>
-                      Record payment
-                    </button>
-                  )}
+                  <div className={styles.rowActions}>
+                    {r.status !== "paid" && (
+                      <>
+                        <button className={styles.actionButton} onClick={() => onRecordPayment(r)}>
+                          Record payment
+                        </button>
+                        <a
+                          className={styles.actionButton}
+                          href={whatsappLink(r.tenantPhone, rentReminderText(r, propertyName))}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Opens WhatsApp with a reminder typed in — you press Send"
+                        >
+                          Remind
+                        </a>
+                      </>
+                    )}
+                    {r.latestTransactionId !== null && (
+                      <Link className={styles.actionButton} to={`/receipts/${r.latestTransactionId}`}>
+                        Receipt
+                      </Link>
+                    )}
+                  </div>
                 </td>
               </tr>
             );

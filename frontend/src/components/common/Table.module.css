@@ -60,7 +60,17 @@
   outline-offset: 1px;
 }
 
+.rowActions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
 .actionButton {
+  display: inline-block;
+  white-space: nowrap;
+  text-decoration: none;
   background: none;
   border: 1px solid var(--color-rule-strong);
   border-radius: var(--radius-sm);
@@ -71,3 +81,13 @@
 
 .actionButton:hover { border-color: var(--color-teal); color: var(--color-teal); }
 .actionButton:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 1px; }
+
+/* Row reached from search: brass wash that fades. */
+.rowFocus {
+  animation: rowFocus 2.4s ease-out forwards;
+}
+
+@keyframes rowFocus {
+  0%, 60% { background: var(--color-brass-tint); }
+  100% { background: transparent; }
+}

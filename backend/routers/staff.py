@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+import audit
 from auth import get_current_user, hash_password, require_owner
 from database import get_db
 from models.db_models import StaffUser
-from models.schemas import CreateStaffRequest, StaffRef, StaffUserOut
+from models.schemas import CreateStaffRequest, ResetPasswordRequest, StaffRef, StaffUserOut
 
 router = APIRouter(prefix="/staff", tags=["staff"])
 
@@ -55,6 +56,32 @@ def deactivate_staff(
     if user.id == owner.id:
         raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
     user.is_active = False
+    user.token_version += 1
+    audit.record(db, owner, "staff.deactivated", "staff_user", user.id, user.username)
+    db.commit()
+    db.refresh(user)
+    return StaffUserOut.model_validate(user, from_attributes=True)
+
+
+@router.post("/{staff_id}/reset-password", response_model=StaffUserOut)
+def reset_password(
+    staff_id: int,
+    request: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+    owner: StaffUser = Depends(require_owner),
+):
+    """Owner sets a new password for a staff member who forgot theirs. Their
+    open sessions end immediately. Owners change their own via /auth/change-password."""
+    user = db.get(StaffUser, staff_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Staff user not found")
+    if user.id == owner.id:
+        raise HTTPException(status_code=400, detail="Use Change password for your own account")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="This account is deactivated")
+    user.password_hash = hash_password(request.newPassword)
+    user.token_version += 1
+    audit.record(db, owner, "staff.password_reset", "staff_user", user.id, user.username)
     db.commit()
     db.refresh(user)
     return StaffUserOut.model_validate(user, from_attributes=True)

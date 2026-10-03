@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { ApiError, createLead, listLeads, updateLead } from "../api/client";
+import { Link, useSearchParams } from "react-router-dom";
+import { ApiError, createLead, createTenant, listLeads, updateLead } from "../api/client";
+import { TenantFormModal } from "../components/tenants/TenantFormModal";
 import { useLatestRequest } from "../lib/useLatestRequest";
 import type { Lead, LeadStatus } from "../types/contract";
 import { LeadTable } from "../components/leads/LeadTable";
@@ -14,6 +16,10 @@ export function LeadsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
   const beginLoad = useLatestRequest();
+  const [movingIn, setMovingIn] = useState<Lead | null>(null);
+  const [movedIn, setMovedIn] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const highlightId = Number(searchParams.get("highlight")) || null; // from search
 
   function load(includeArchived: boolean) {
     const isLatest = beginLoad();
@@ -36,6 +42,24 @@ export function LeadsPage() {
   async function handleCreate(data: Parameters<typeof createLead>[0]) {
     const lead = await createLead(data);
     setLeads((prev) => [lead, ...prev]);
+  }
+
+  useEffect(() => {
+    if (highlightId && !isLoading) document.getElementById(`lead-${highlightId}`)?.scrollIntoView({ block: "center" });
+  }, [highlightId, isLoading]);
+
+  async function handleMoveIn(data: Parameters<typeof createTenant>[0]) {
+    if (!movingIn) return;
+    const tenant = await createTenant(data);
+    if (movingIn.status !== "booked") {
+      try {
+        const updated = await updateLead(movingIn.id, { status: "booked" });
+        setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+      } catch {
+        /* the resident exists; the lead status is a nicety */
+      }
+    }
+    setMovedIn(`${tenant.name} moved into Room ${tenant.roomNumber}/${tenant.bedLabel}.`);
   }
 
   async function handleStatusChange(leadId: number, status: LeadStatus) {
@@ -77,9 +101,28 @@ export function LeadsPage() {
       </label>
 
       {error && <p className={pageStyles.error}>{error}</p>}
-      {isLoading ? <p className={pageStyles.loading}>Loading leads…</p> : <LeadTable leads={leads} savingIds={savingIds} onStatusChange={handleStatusChange} />}
+      {movedIn && (
+        <p className={pageStyles.success} role="status">
+          <span>
+            {movedIn} <Link to="/tenants">See in Tenants →</Link>
+          </span>
+          <button className={pageStyles.dismiss} onClick={() => setMovedIn(null)} aria-label="Dismiss">×</button>
+        </p>
+      )}
+      {isLoading ? (
+        <p className={pageStyles.loading}>Loading leads…</p>
+      ) : (
+        <LeadTable leads={leads} savingIds={savingIds} highlightId={highlightId} onStatusChange={handleStatusChange} onMoveIn={setMovingIn} />
+      )}
 
       {isModalOpen && <LeadFormModal onClose={() => setIsModalOpen(false)} onSubmit={handleCreate} />}
+      {movingIn && (
+        <TenantFormModal
+          initial={{ name: movingIn.name, phone: movingIn.phone }}
+          onClose={() => setMovingIn(null)}
+          onSubmit={handleMoveIn}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -7,11 +8,15 @@ import audit
 import clock
 from auth import get_current_user
 from database import get_db
-from models.db_models import AgreementRenewal, Bed, MoveOutNotice, Payment, StaffUser, Tenant, TenantDocument
+from models.db_models import AgreementRenewal, Bed, MoveOutNotice, Payment, Property, StaffUser, Tenant, TenantDocument
 from models.schemas import (
     CreateTenantRequest,
     GiveNoticeRequest,
+    ImportRowError,
     RenewAgreementRequest,
+    TenantImportRequest,
+    TenantImportResult,
+    TenantImportRow,
     TenantOut,
     UploadDocumentRequest,
 )
@@ -91,6 +96,98 @@ def create_tenant(
     db.commit()
     db.refresh(tenant)
     return serialize_tenant(tenant)
+
+
+IMPORT_COLUMN_NAMES = {
+    "name": "Name",
+    "phone": "Phone",
+    "roomNumber": "Room",
+    "bedLabel": "Bed",
+    "moveInDate": "Move-in date",
+    "rentDueDay": "Rent due day",
+    "rentAmount": "Rent",
+    "depositAmount": "Deposit",
+    "agreementExpiry": "Agreement ends",
+}
+
+
+def _row_messages(err: ValidationError) -> list[str]:
+    messages = []
+    for e in err.errors():
+        field = IMPORT_COLUMN_NAMES.get(str(e["loc"][0]), "") if e["loc"] else ""
+        msg = e["msg"].removeprefix("Value error, ")
+        messages.append(f"{field}: {msg}" if field else msg)
+    return messages
+
+
+@router.post("/import", response_model=TenantImportResult)
+def import_tenants(
+    request: TenantImportRequest,
+    dryRun: bool = True,
+    db: Session = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
+    """Bring in an existing tenant register (from Excel, saved as CSV). Every
+    row is checked first — data, bed exists, bed free, bed not used twice in
+    the sheet. `dryRun=true` only reports; a real run creates all rows or none."""
+    properties = db.query(Property).all()
+    if request.propertyId is not None:
+        prop = next((p for p in properties if p.id == request.propertyId), None)
+    elif len(properties) == 1:
+        prop = properties[0]
+    else:
+        prop = None
+    if prop is None:
+        raise HTTPException(status_code=400, detail="Choose which property to import into")
+
+    beds = {(b.room_number, b.bed_label.upper()): b for b in db.query(Bed).filter(Bed.property_id == prop.id)}
+    errors: list[ImportRowError] = []
+    valid: list[tuple[TenantImportRow, Bed]] = []
+    used: dict[tuple[str, str], int] = {}
+
+    for index, raw in enumerate(request.rows, start=1):
+        try:
+            row = TenantImportRow.model_validate(raw)
+        except ValidationError as e:
+            errors.extend(ImportRowError(row=index, message=m) for m in _row_messages(e))
+            continue
+        key = (row.roomNumber, row.bedLabel.upper())
+        bed = beds.get(key)
+        if bed is None:
+            errors.append(ImportRowError(row=index, message=f"Room {row.roomNumber} has no bed {row.bedLabel} — add it in Rooms & Beds first"))
+        elif any(t.is_active for t in bed.tenants):
+            errors.append(ImportRowError(row=index, message=f"Bed {row.roomNumber}/{row.bedLabel} is already occupied"))
+        elif key in used:
+            errors.append(ImportRowError(row=index, message=f"Bed {row.roomNumber}/{row.bedLabel} is also used on row {used[key]}"))
+        else:
+            used[key] = index
+            valid.append((row, bed))
+
+    if errors or dryRun:
+        return TenantImportResult(ok=not errors, dryRun=dryRun, created=0, errors=errors)
+
+    try:
+        for row, bed in valid:
+            tenant = Tenant(
+                name=row.name,
+                phone=row.phone,
+                bed_id=bed.id,
+                move_in_date=row.moveInDate,
+                rent_due_day=row.rentDueDay,
+                rent_amount=row.rentAmount if row.rentAmount is not None else bed.rent_amount,
+                deposit_amount=row.depositAmount,
+                agreement_expiry=row.agreementExpiry,
+            )
+            db.add(tenant)
+            db.flush()
+            for doc_type, label in DEFAULT_DOCUMENTS:
+                db.add(TenantDocument(tenant_id=tenant.id, doc_type=doc_type, label=label))
+        audit.record(db, user, "tenants.imported", "property", prop.id, f"{len(valid)} tenants")
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="A bed in this sheet was just taken by someone else — check again and retry")
+    return TenantImportResult(ok=True, dryRun=False, created=len(valid), errors=[])
 
 
 @router.post("/{tenant_id}/notice", response_model=TenantOut, status_code=201)

@@ -56,6 +56,11 @@ def serialize_bed(bed: Bed, today: datetime.date) -> BedOut:
             else:
                 rent_state = "paid"
 
+    vacant_since = None
+    if active_tenant is None:
+        past = [t.move_out_date for t in bed.tenants if t.move_out_date is not None]
+        vacant_since = max(past) if past else None
+
     return BedOut(
         id=bed.id,
         propertyId=bed.property_id,
@@ -68,6 +73,7 @@ def serialize_bed(bed: Bed, today: datetime.date) -> BedOut:
         rentState=rent_state,
         daysLate=days_late,
         outstanding=outstanding,
+        vacantSince=vacant_since,
     )
 
 
@@ -153,7 +159,13 @@ def serialize_payment(payment: Payment, today: datetime.date) -> RentRecordOut:
         amountPaid=payment.amount_paid,
         paidDate=payment.paid_date,
         status=payment_status(payment, today),
+        tenantPhone=payment.tenant.phone,
+        latestTransactionId=max((t.id for t in payment.transactions), default=None),
     )
+
+
+def receipt_number(tx: PaymentTransaction) -> str:
+    return f"R{tx.id:06d}"
 
 
 def serialize_transaction(tx: PaymentTransaction) -> PaymentTransactionOut:
@@ -170,6 +182,8 @@ def serialize_transaction(tx: PaymentTransaction) -> PaymentTransactionOut:
         paidDate=tx.paid_date,
         method=tx.method,
         note=tx.note,
+        tenantPhone=tenant.phone,
+        receiptNumber=receipt_number(tx),
     )
 
 

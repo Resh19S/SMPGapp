@@ -7,6 +7,7 @@ import styles from "./TenantDetailModal.module.css";
 import type { Tenant } from "../../types/contract";
 import { addDaysISO, formatDate, inr, todayISO } from "../../lib/format";
 import { RenewalPanel } from "./RenewalPanel";
+import { whatsappLink } from "../../lib/whatsapp";
 
 const NOTICE_STATUS_LABEL = { notice: "notice given", "inspection-scheduled": "inspection booked", settled: "settled" };
 
@@ -57,7 +58,16 @@ export function TenantDetailModal({
       {error && <div className={formStyles.error}>{error}</div>}
 
       <dl className={styles.detailGrid}>
-        <div><dt>Phone</dt><dd className={styles.mono}>{tenant.phone}</dd></div>
+        <div>
+          <dt>Phone</dt>
+          <dd className={styles.contact}>
+            <span className={styles.mono}>{tenant.phone}</span>
+            <a className={styles.contactLink} href={`tel:+91${tenant.phone}`}>Call</a>
+            <a className={styles.contactLink} href={whatsappLink(tenant.phone, `Hi ${tenant.name.split(" ")[0]}, `)} target="_blank" rel="noreferrer">
+              WhatsApp
+            </a>
+          </dd>
+        </div>
         <div><dt>Room / Bed</dt><dd>{tenant.roomNumber} / {tenant.bedLabel}</dd></div>
         <div><dt>Move-in</dt><dd className={styles.mono}>{formatDate(tenant.moveInDate)}</dd></div>
         <div><dt>Rent due day</dt><dd>Day {tenant.rentDueDay} of each month</dd></div>

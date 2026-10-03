@@ -39,6 +39,23 @@
   gap: var(--space-4) var(--space-5);
 }
 
+.room {
+  min-width: 0;
+  border-radius: var(--radius-sm);
+}
+
+/* Room reached from search: a brass outline that fades after a moment. */
+.roomFocus {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 6px;
+  animation: roomFocus 2.4s ease-out forwards;
+}
+
+@keyframes roomFocus {
+  0%, 70% { outline-color: var(--color-brass); }
+  100% { outline-color: transparent; }
+}
+
 .roomHeader {
   font-family: var(--font-mono);
   font-size: var(--text-xs);

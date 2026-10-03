@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { ApiError, createBed, createProperty, listBeds, listProperties, updateBed } from "../api/client";
+import { useSearchParams } from "react-router-dom";
+import { ApiError, createBed, createBedsBulk, createProperty, listBeds, listProperties, updateBed } from "../api/client";
 import type { Bed, BedRentState, Property } from "../types/contract";
 import { BedGrid, RENT_STATE_LABEL, RENT_STATE_ORDER } from "../components/properties/BedGrid";
 import { BedFormModal } from "../components/properties/BedFormModal";
+import { BulkBedsModal } from "../components/properties/BulkBedsModal";
+import { inr } from "../lib/format";
+import { usePropertyStore } from "../store/propertyStore";
 import { EditRentModal } from "../components/properties/EditRentModal";
 import formStyles from "../components/common/Form.module.css";
 import pageStyles from "./PageLayout.module.css";
@@ -11,6 +15,10 @@ export function PropertiesPage() {
   const [property, setProperty] = useState<Property | null>(null);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [isBedModalOpen, setIsBedModalOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const focusRoom = searchParams.get("room");
+  const setStoreProperty = usePropertyStore((s) => s.set);
   const [editingBed, setEditingBed] = useState<Bed | null>(null);
   const [highlight, setHighlight] = useState<BedRentState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,11 +55,25 @@ export function PropertiesPage() {
     try {
       const prop = await createProperty({ name: newPropertyName.trim(), address: newPropertyAddress.trim() });
       setProperty(prop);
+      setStoreProperty(prop);
       setBeds([]);
     } catch (err) {
       setCreateError(err instanceof ApiError ? err.message : "Could not create the property. Please try again.");
     }
   }
+
+  async function handleAddBulk(data: { roomNumbers: string[]; bedLabels: string[]; rentAmount: number }) {
+    if (!property) return;
+    const created = await createBedsBulk({ propertyId: property.id, floor: null, ...data });
+    setBeds((prev) =>
+      [...prev, ...created].sort((a, b) => a.floor - b.floor || a.roomNumber.localeCompare(b.roomNumber) || a.bedLabel.localeCompare(b.bedLabel))
+    );
+  }
+
+  // Arriving from search (?room=204): scroll that room into view once beds are on screen.
+  useEffect(() => {
+    if (focusRoom && beds.length) document.getElementById(`room-${focusRoom}`)?.scrollIntoView({ block: "center" });
+  }, [focusRoom, beds.length]);
 
   async function handleAddBed(data: { roomNumber: string; bedLabel: string; rentAmount: number }) {
     if (!property) return;
@@ -63,6 +85,9 @@ export function PropertiesPage() {
     const updated = await updateBed(bedId, { rentAmount });
     setBeds((prev) => prev.map((b) => (b.id === bedId ? updated : b)));
   }
+
+  const vacantBeds = beds.filter((b) => b.rentState === "vacant").length;
+  const vacantCost = beds.filter((b) => b.rentState === "vacant").reduce((sum, b) => sum + b.rentAmount, 0);
 
   if (isLoading) return <p className={pageStyles.loading}>Loading rooms…</p>;
   if (error) return <p className={pageStyles.error}>{error}</p>;
@@ -97,9 +122,14 @@ export function PropertiesPage() {
             {property.name} — {property.address}. Colour shows each bed's rent for this month; click a bed for details.
           </p>
         </div>
-        <button className={pageStyles.primaryAction} onClick={() => setIsBedModalOpen(true)}>
-          + Add bed
-        </button>
+        <div className={pageStyles.headerActions}>
+          <button className={pageStyles.secondaryAction} onClick={() => setIsBedModalOpen(true)}>
+            + Add one bed
+          </button>
+          <button className={pageStyles.primaryAction} onClick={() => setIsBulkOpen(true)}>
+            + Add rooms
+          </button>
+        </div>
       </div>
 
       <div className={pageStyles.filterBar} role="group" aria-label="Highlight beds by rent state">
@@ -126,9 +156,16 @@ export function PropertiesPage() {
         )}
       </div>
 
-      <BedGrid beds={beds} highlight={highlight} onSelect={setEditingBed} />
+      {vacantCost > 0 && (
+        <p className={pageStyles.muted} style={{ marginBottom: "var(--space-3)" }}>
+          {vacantBeds} empty bed{vacantBeds > 1 ? "s" : ""} — <strong>{inr(vacantCost)}/month</strong> of rent not coming in.
+        </p>
+      )}
+
+      <BedGrid beds={beds} highlight={highlight} focusRoom={focusRoom} onSelect={setEditingBed} />
 
       {isBedModalOpen && <BedFormModal onClose={() => setIsBedModalOpen(false)} onSubmit={handleAddBed} />}
+      {isBulkOpen && <BulkBedsModal onClose={() => setIsBulkOpen(false)} onSubmit={handleAddBulk} />}
       {editingBed && (
         <EditRentModal
           bed={editingBed}

@@ -16,11 +16,12 @@ from models.db_models import Payment, PaymentTransaction, StaffUser, Tenant
 from models.schemas import (
     DailyCollection,
     PaymentTransactionOut,
+    ReceiptOut,
     RecordPaymentRequest,
     RentRecordOut,
     RentSummaryOut,
 )
-from serializers import payment_status, rent_for_period, serialize_payment, serialize_transaction
+from serializers import outstanding_amount, payment_status, rent_for_period, serialize_payment, serialize_transaction
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -167,7 +168,9 @@ def list_payments(
     today = clock.today()
     ensure_payments_up_to_date(db, today)
 
-    query = db.query(Payment).options(selectinload(Payment.tenant).selectinload(Tenant.bed))
+    query = db.query(Payment).options(
+        selectinload(Payment.tenant).selectinload(Tenant.bed), selectinload(Payment.transactions)
+    )
     if periodMonth is not None:
         query = query.filter(Payment.period_month == periodMonth)
     payments = query.order_by(Payment.due_date.desc(), Payment.id).all()
@@ -230,6 +233,31 @@ def list_transactions(
         query = query.filter(Payment.period_month == periodMonth)
     txs = query.order_by(PaymentTransaction.paid_date.desc(), PaymentTransaction.id.desc()).limit(limit).all()
     return [serialize_transaction(tx) for tx in txs]
+
+
+@router.get("/transactions/{transaction_id}", response_model=ReceiptOut)
+def get_receipt(
+    transaction_id: int,
+    db: Session = Depends(get_db),
+    _user: StaffUser = Depends(get_current_user),
+):
+    """Everything a printable rent receipt needs for one payment."""
+    tx = db.get(PaymentTransaction, transaction_id)
+    if tx is None:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    payment = tx.payment
+    paid_so_far = sum(t.amount for t in payment.transactions if t.id <= tx.id)
+    prop = payment.tenant.bed.property
+    recorder = db.get(StaffUser, tx.recorded_by_id) if tx.recorded_by_id else None
+    return ReceiptOut(
+        **serialize_transaction(tx).model_dump(),
+        propertyName=prop.name,
+        propertyAddress=prop.address,
+        monthRent=payment.amount_due,
+        paidSoFar=paid_so_far,
+        balance=max(payment.amount_due - paid_so_far, 0),
+        receivedBy=recorder.name if recorder else None,
+    )
 
 
 @router.post("/{payment_id}/transactions", response_model=RentRecordOut, status_code=201)

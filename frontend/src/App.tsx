@@ -11,6 +11,7 @@ import { RentTrackerPage } from "./pages/RentTrackerPage";
 import { StaffPage } from "./pages/StaffPage";
 import { OperationsPage } from "./pages/OperationsPage";
 import { ProfitLossPage } from "./pages/ProfitLossPage";
+import { ReceiptPage } from "./pages/ReceiptPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -29,6 +30,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/receipts/:id"
+          element={
+            <RequireAuth>
+              <ReceiptPage />
+            </RequireAuth>
+          }
+        />
         <Route
           element={
             <RequireAuth>

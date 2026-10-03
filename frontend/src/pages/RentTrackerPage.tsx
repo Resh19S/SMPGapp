@@ -5,7 +5,10 @@ import { RentTable } from "../components/rent/RentTable";
 import { RecordPaymentModal } from "../components/rent/RecordPaymentModal";
 import { CollectionChart } from "../components/rent/CollectionChart";
 import { StatTile } from "../components/common/StatTile";
+import { Link } from "react-router-dom";
 import { currentMonthISO, formatDate, inr, inrCompact, monthLabel } from "../lib/format";
+import { downloadCsv } from "../lib/csv";
+import { usePropertyStore } from "../store/propertyStore";
 import pageStyles from "./PageLayout.module.css";
 import styles from "./RentTrackerPage.module.css";
 
@@ -27,6 +30,8 @@ export function RentTrackerPage() {
   const [selectedRecord, setSelectedRecord] = useState<RentRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [justRecorded, setJustRecorded] = useState<RentRecord | null>(null);
+  const propertyName = usePropertyStore((s) => s.property?.name ?? "your PG");
 
   const period = periodFilter === "all" ? null : periodFilter;
   const latestSummaryRequest = useRef(0);
@@ -79,7 +84,28 @@ export function RentTrackerPage() {
   ) {
     const updated = await recordPayment(paymentId, data, idempotencyKey);
     setRecords((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    setJustRecorded(updated);
     loadSummary();
+  }
+
+  function exportCsv() {
+    downloadCsv(
+      `rent-${period ?? "all-months"}`,
+      ["Tenant", "Phone", "Room", "Bed", "Month", "Due date", "Rent", "Paid", "Balance", "Paid on", "Status"],
+      filtered.map((r) => [
+        r.tenantName,
+        r.tenantPhone,
+        r.roomNumber,
+        r.bedLabel,
+        r.periodMonth,
+        formatDate(r.dueDate),
+        r.amountDue,
+        r.amountPaid,
+        r.amountDue - r.amountPaid,
+        formatDate(r.paidDate),
+        r.status,
+      ])
+    );
   }
 
   const collectedPct = summary && summary.billed ? Math.round((summary.collected / summary.billed) * 100) : 0;
@@ -154,12 +180,12 @@ export function RentTrackerPage() {
               <ul className={styles.receipts}>
                 {transactions.map((tx) => (
                   <li key={tx.id}>
-                    <span className={styles.receiptName}>
+                    <Link className={styles.receiptName} to={`/receipts/${tx.id}`} title={`Open receipt ${tx.receiptNumber}`}>
                       {tx.tenantName}
                       <span className={styles.receiptMeta}>
-                        Room {tx.roomNumber}/{tx.bedLabel} · {METHOD_LABEL[tx.method]} · {formatDate(tx.paidDate)}
+                        {tx.receiptNumber} · Room {tx.roomNumber}/{tx.bedLabel} · {METHOD_LABEL[tx.method]} · {formatDate(tx.paidDate)}
                       </span>
-                    </span>
+                    </Link>
                     <span className={styles.receiptAmount}>{inr(tx.amount)}</span>
                   </li>
                 ))}
@@ -177,14 +203,31 @@ export function RentTrackerPage() {
         </div>
       </div>
 
-      <h2 className={pageStyles.sectionTitle} style={{ marginTop: "var(--space-6)" }}>
-        Payments {period ? `— ${monthLabel(period)}` : "— all months"}
-      </h2>
+      <div className={styles.tableHeader}>
+        <h2 className={pageStyles.sectionTitle}>
+          Payments {period ? `— ${monthLabel(period)}` : "— all months"}
+        </h2>
+        <button className={pageStyles.secondaryAction} onClick={exportCsv} disabled={filtered.length === 0}>
+          Export to Excel
+        </button>
+      </div>
+      {justRecorded && (
+        <div className={styles.recorded} role="status">
+          <span>
+            Payment recorded for <strong>{justRecorded.tenantName}</strong> — {monthLabel(justRecorded.periodMonth)}{" "}
+            {justRecorded.status === "paid" ? "is fully paid." : `has ${inr(justRecorded.amountDue - justRecorded.amountPaid)} left.`}
+          </span>
+          {justRecorded.latestTransactionId !== null && (
+            <Link to={`/receipts/${justRecorded.latestTransactionId}`}>View &amp; send receipt →</Link>
+          )}
+          <button className={styles.dismiss} onClick={() => setJustRecorded(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
       {error && <p className={pageStyles.error}>{error}</p>}
       {isLoading ? (
         <p className={pageStyles.loading}>Loading rent records…</p>
       ) : (
-        <RentTable records={filtered} onRecordPayment={setSelectedRecord} />
+        <RentTable records={filtered} propertyName={propertyName} onRecordPayment={setSelectedRecord} />
       )}
 
       {selectedRecord && (

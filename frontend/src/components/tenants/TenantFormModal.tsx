@@ -5,9 +5,11 @@ import { ApiError, listBeds } from "../../api/client";
 import type { Bed } from "../../types/contract";
 
 export function TenantFormModal({
+  initial,
   onClose,
   onSubmit,
 }: {
+  initial?: { name: string; phone: string }; // e.g. a booked enquiry being moved in
   onClose: () => void;
   onSubmit: (data: {
     name: string;
@@ -21,8 +23,8 @@ export function TenantFormModal({
   }) => Promise<void>;
 }) {
   const [vacantBeds, setVacantBeds] = useState<Bed[]>([]);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
   const [bedId, setBedId] = useState<number | "">("");
   const [moveInDate, setMoveInDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [rentDueDay, setRentDueDay] = useState("1");

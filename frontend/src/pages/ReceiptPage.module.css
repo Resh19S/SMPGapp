@@ -1,0 +1,129 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-paper);
+  padding: var(--space-6) var(--space-4);
+}
+
+.toolbar {
+  max-width: 640px;
+  margin: 0 auto var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.toolbarActions { display: flex; gap: var(--space-2); }
+
+.back { font-size: var(--text-sm); color: var(--color-teal); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+
+.whatsapp,
+.print {
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  border: 1px solid var(--color-teal);
+}
+
+.whatsapp { color: var(--color-teal); background: transparent; }
+.whatsapp:hover { background: var(--color-teal-tint); }
+.print { background: var(--color-teal); color: var(--color-chrome-text); }
+.print:hover { background: var(--color-teal-strong); }
+.whatsapp:focus-visible, .print:focus-visible, .back:focus-visible { outline: 2px solid var(--color-brass); outline-offset: 2px; }
+
+/* The receipt itself: a ledger slip. */
+.receipt {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-8);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  border-bottom: 3px double var(--color-rule-strong);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.property {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+
+.address { font-size: var(--text-sm); color: var(--color-ink-soft); margin-top: var(--space-1); }
+
+.stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid var(--color-brass);
+  color: var(--color-brass-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  transform: rotate(-3deg);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.stamp strong { font-size: var(--text-base); letter-spacing: 0.04em; }
+
+.lead { font-size: var(--text-base); color: var(--color-ink-soft); }
+.lead strong { color: var(--color-ink); }
+
+.amount {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  margin: var(--space-2) 0 var(--space-5);
+}
+
+.details { font-size: var(--text-sm); border-top: 1px solid var(--color-rule); }
+
+.details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.details dt { color: var(--color-ink-soft); }
+.details dd { font-family: var(--font-mono); text-align: right; }
+
+.balanceRow { font-weight: var(--weight-semibold); }
+.balanceRow dt { color: var(--color-ink); }
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+  flex-wrap: wrap;
+}
+
+.loading, .error { max-width: 640px; margin: 0 auto var(--space-3); color: var(--color-ink-soft); }
+.error { color: var(--color-status-overdue); }
+
+@media print {
+  .page { background: white; padding: 0; min-height: 0; }
+  .toolbar { display: none; }
+  .receipt { box-shadow: none; border: 1px solid #999; max-width: none; }
+}

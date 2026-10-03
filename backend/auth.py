@@ -33,6 +33,7 @@ def create_access_token(user: StaffUser) -> str:
         "sub": str(user.id),
         "username": user.username,
         "role": user.role,
+        "tv": user.token_version,
         "exp": datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=JWT_EXPIRE_MINUTES),
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -50,6 +51,8 @@ def get_current_user(
     user = db.get(StaffUser, int(payload["sub"]))
     if user is None or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or deactivated")
+    if payload.get("tv", 0) != user.token_version:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session ended — please sign in again")
     return user
 
 

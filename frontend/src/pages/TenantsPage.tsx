@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { createTenant, giveNotice, listTenants, renewAgreement, uploadTenantDocument } from "../api/client";
+import { createTenant, getTenant, giveNotice, listTenants, renewAgreement, uploadTenantDocument } from "../api/client";
+import { ImportTenantsModal } from "../components/tenants/ImportTenantsModal";
+import { downloadCsv } from "../lib/csv";
+import { formatDate } from "../lib/format";
 import type { Tenant } from "../types/contract";
 import { TenantTable, needsRenewal } from "../components/tenants/TenantTable";
 import { useLatestRequest } from "../lib/useLatestRequest";
@@ -18,6 +21,9 @@ export function TenantsPage() {
   // ?filter=renewals comes from the dashboard's agreement items.
   const [searchParams, setSearchParams] = useSearchParams();
   const renewalsOnly = searchParams.get("filter") === "renewals";
+  const openId = Number(searchParams.get("open")) || null; // from search
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const renewalsDue = tenants.filter(needsRenewal).length;
   const visible = renewalsOnly ? tenants.filter(needsRenewal) : tenants;
 
@@ -44,6 +50,41 @@ export function TenantsPage() {
   async function handleCreate(data: Parameters<typeof createTenant>[0]) {
     const tenant = await createTenant(data);
     setTenants((prev) => [tenant, ...prev]);
+  }
+
+  // Arriving from search (?open=12): open that resident's details.
+  useEffect(() => {
+    if (!openId) return;
+    getTenant(openId)
+      .then(setSelectedTenant)
+      .catch(() => setError("Could not open that resident."));
+  }, [openId]);
+
+  function closeDetails() {
+    setSelectedTenant(null);
+    if (openId) {
+      searchParams.delete("open");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }
+
+  function exportCsv() {
+    downloadCsv(
+      "tenants",
+      ["Name", "Phone", "Room", "Bed", "Move-in date", "Rent", "Rent due day", "Deposit", "Agreement ends", "Status"],
+      visible.map((t) => [
+        t.name,
+        t.phone,
+        t.roomNumber,
+        t.bedLabel,
+        formatDate(t.moveInDate),
+        t.rentAmount,
+        t.rentDueDay,
+        t.depositAmount,
+        formatDate(t.agreementExpiry),
+        !t.isActive ? "moved out" : t.notice ? `leaving ${formatDate(t.notice.plannedMoveOutDate)}` : "active",
+      ])
+    );
   }
 
   async function handleRenew(data: { newExpiry: string; newRent: number; effectiveFrom: string }) {
@@ -74,10 +115,24 @@ export function TenantsPage() {
           <h1 className={pageStyles.title}>Tenants</h1>
           <p className={pageStyles.subtitle}>Documents, deposits, and agreement dates for everyone currently living in.</p>
         </div>
-        <button className={pageStyles.primaryAction} onClick={() => setIsFormOpen(true)}>
-          + Move in tenant
-        </button>
+        <div className={pageStyles.headerActions}>
+          <button className={pageStyles.secondaryAction} onClick={exportCsv} disabled={visible.length === 0}>
+            Export to Excel
+          </button>
+          <button className={pageStyles.secondaryAction} onClick={() => setIsImportOpen(true)}>
+            Import from Excel
+          </button>
+          <button className={pageStyles.primaryAction} onClick={() => setIsFormOpen(true)}>
+            + Move in tenant
+          </button>
+        </div>
       </div>
+      {notice && (
+        <p className={pageStyles.success} role="status">
+          {notice}
+          <button className={pageStyles.dismiss} onClick={() => setNotice(null)} aria-label="Dismiss">×</button>
+        </p>
+      )}
 
       <div className={pageStyles.filterBar}>
         <button
@@ -107,11 +162,20 @@ export function TenantsPage() {
         <TenantTable tenants={visible} onSelect={setSelectedTenant} />
       )}
 
+      {isImportOpen && (
+        <ImportTenantsModal
+          onClose={() => setIsImportOpen(false)}
+          onImported={(count) => {
+            setNotice(`${count} tenant${count === 1 ? "" : "s"} imported.`);
+            load(includeMovedOut);
+          }}
+        />
+      )}
       {isFormOpen && <TenantFormModal onClose={() => setIsFormOpen(false)} onSubmit={handleCreate} />}
       {selectedTenant && (
         <TenantDetailModal
           tenant={selectedTenant}
-          onClose={() => setSelectedTenant(null)}
+          onClose={closeDetails}
           onUploadDocument={handleUploadDocument}
           onGiveNotice={handleGiveNotice}
           onRenew={handleRenew}

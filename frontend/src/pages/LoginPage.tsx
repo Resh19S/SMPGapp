@@ -34,9 +34,9 @@ export function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.stamp}>SPG</div>
-        <h1 className={styles.title}>Sunrise PG</h1>
-        <p className={styles.subtitle}>Property manager sign-in</p>
+        <div className={styles.stamp}>PG</div>
+        <h1 className={styles.title}>Sign in</h1>
+        <p className={styles.subtitle}>Rooms, rent and residents in one ledger.</p>
 
         <form onSubmit={handleSubmit}>
           {error && <div className={styles.error}>{error}</div>}
@@ -69,9 +69,10 @@ export function LoginPage() {
           </button>
         </form>
 
-        <p className={styles.hint}>
-          Demo accounts — owner / owner123 · staff / staff123
-        </p>
+        {/* Only when explicitly turned on for a local demo — never on a live server. */}
+        {import.meta.env.VITE_SHOW_DEMO_LOGINS === "true" && (
+          <p className={styles.hint}>Demo accounts — owner / owner123 · staff / staff123</p>
+        )}
       </div>
     </div>
   );

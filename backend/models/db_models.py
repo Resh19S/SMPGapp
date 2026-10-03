@@ -22,6 +22,9 @@ class StaffUser(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20), default="staff")  # owner | staff
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Bumped on password change/reset or deactivation; tokens carry the value
+    # they were issued with, so bumping it signs the user out everywhere.
+    token_version: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=clock.utcnow)
 
 

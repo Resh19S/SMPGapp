@@ -1,5 +1,5 @@
 import type { Bed, BedRentState } from "../../types/contract";
-import { inr } from "../../lib/format";
+import { inr, todayISO } from "../../lib/format";
 import styles from "./BedGrid.module.css";
 
 export const RENT_STATE_LABEL: Record<BedRentState, string> = {
@@ -13,8 +13,15 @@ export const RENT_STATE_LABEL: Record<BedRentState, string> = {
 
 export const RENT_STATE_ORDER: BedRentState[] = ["late", "due-today", "due", "paid", "reserved", "vacant"];
 
+function daysSince(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  const [ty, tm, td] = todayISO().split("-").map(Number);
+  return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(y, m - 1, d)) / 86_400_000);
+}
+
 function stampText(bed: Bed): string {
   if (bed.rentState === "late") return `${bed.daysLate}d late`;
+  if (bed.rentState === "vacant" && bed.vacantSince) return `Vacant ${daysSince(bed.vacantSince)}d`;
   return RENT_STATE_LABEL[bed.rentState];
 }
 
@@ -33,10 +40,12 @@ function groupBy<T, K>(items: T[], key: (item: T) => K): Map<K, T[]> {
 export function BedGrid({
   beds,
   highlight,
+  focusRoom,
   onSelect,
 }: {
   beds: Bed[];
   highlight: BedRentState | null;
+  focusRoom: string | null; // from search: outline this room and scroll to it
   onSelect: (bed: Bed) => void;
 }) {
   if (beds.length === 0) {
@@ -60,7 +69,11 @@ export function BedGrid({
             </header>
             <div className={styles.rooms}>
               {[...rooms.entries()].map(([roomNumber, roomBeds]) => (
-                <div key={roomNumber} className={styles.room}>
+                <div
+                  key={roomNumber}
+                  id={`room-${roomNumber}`}
+                  className={`${styles.room} ${focusRoom === roomNumber ? styles.roomFocus : ""}`}
+                >
                   <div className={styles.roomHeader}>Room {roomNumber}</div>
                   <div className={styles.bedRow}>
                     {roomBeds.map((bed) => {

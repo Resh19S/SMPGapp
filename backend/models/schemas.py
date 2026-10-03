@@ -86,6 +86,18 @@ class LoginResponse(BaseModel):
     user: StaffUserOut
 
 
+Password = Annotated[str, StringConstraints(min_length=8, max_length=200)]
+
+
+class ChangePasswordRequest(BaseModel):
+    currentPassword: Annotated[str, StringConstraints(min_length=1, max_length=200)]
+    newPassword: Password
+
+
+class ResetPasswordRequest(BaseModel):
+    newPassword: Password
+
+
 class CreateStaffRequest(BaseModel):
     name: Name
     username: Annotated[
@@ -128,6 +140,7 @@ class BedOut(BaseModel):
     rentState: BedRentState
     daysLate: Optional[int] = None
     outstanding: float = 0
+    vacantSince: Optional[datetime.date] = None  # last resident's move-out date, if vacant and ever let
 
 
 class CreateBedRequest(BaseModel):
@@ -136,6 +149,24 @@ class CreateBedRequest(BaseModel):
     roomNumber: ShortLabel
     bedLabel: ShortLabel
     rentAmount: Rent
+
+
+class BulkBedsRequest(BaseModel):
+    """Set up many rooms at once: every room gets every bed label."""
+
+    propertyId: int
+    floor: Optional[Annotated[int, Field(ge=0, le=200)]] = None
+    roomNumbers: Annotated[list[ShortLabel], Field(min_length=1, max_length=60)]
+    bedLabels: Annotated[list[ShortLabel], Field(min_length=1, max_length=10)]
+    rentAmount: Rent
+
+    @model_validator(mode="after")
+    def _no_duplicates(self):
+        if len(set(self.roomNumbers)) != len(self.roomNumbers):
+            raise ValueError("Room numbers repeat")
+        if len(set(self.bedLabels)) != len(self.bedLabels):
+            raise ValueError("Bed labels repeat")
+        return self
 
 
 class UpdateBedRequest(BaseModel):
@@ -248,6 +279,44 @@ class CreateTenantRequest(BaseModel):
         return self
 
 
+class TenantImportRow(BaseModel):
+    """One line of an imported tenant sheet — the bed is found by room + label."""
+
+    name: Name
+    phone: Phone
+    roomNumber: ShortLabel
+    bedLabel: ShortLabel
+    moveInDate: Day
+    rentDueDay: int = Field(ge=1, le=31)
+    rentAmount: Optional[Rent] = None
+    depositAmount: Deposit
+    agreementExpiry: Day
+
+    @model_validator(mode="after")
+    def _agreement_after_move_in(self):
+        if self.agreementExpiry <= self.moveInDate:
+            raise ValueError("Agreement must end after the move-in date")
+        return self
+
+
+class TenantImportRequest(BaseModel):
+    propertyId: Optional[int] = None  # required only when there's more than one property
+    # Raw dicts so one bad row is reported, not a 422 for the whole sheet.
+    rows: Annotated[list[dict], Field(min_length=1, max_length=500)]
+
+
+class ImportRowError(BaseModel):
+    row: int  # 1-based, as in the sheet (excluding the header)
+    message: str
+
+
+class TenantImportResult(BaseModel):
+    ok: bool
+    dryRun: bool
+    created: int
+    errors: list[ImportRowError]
+
+
 class GiveNoticeRequest(BaseModel):
     noticeDate: Day
     plannedMoveOutDate: Day
@@ -277,6 +346,8 @@ class RentRecordOut(BaseModel):
     amountPaid: float
     paidDate: Optional[datetime.date]
     status: PaymentStatus
+    tenantPhone: str
+    latestTransactionId: Optional[int] = None  # newest receipt for this month, if any
 
 
 class RecordPaymentRequest(BaseModel):
@@ -298,6 +369,17 @@ class PaymentTransactionOut(BaseModel):
     paidDate: datetime.date
     method: PaymentMethod
     note: str
+    tenantPhone: str
+    receiptNumber: str
+
+
+class ReceiptOut(PaymentTransactionOut):
+    propertyName: str
+    propertyAddress: str
+    monthRent: float
+    paidSoFar: float  # for that month, including this receipt
+    balance: float  # still owed for that month
+    receivedBy: Optional[str]
 
 
 class DailyCollection(BaseModel):
@@ -379,6 +461,25 @@ class DashboardSummaryOut(BaseModel):
     moveOutsToday: list[MoveEntry]
     followUpsToday: list[FollowUpEntry]
     rentOverdueCount: int
+    vacantRentPerMonth: float  # listed rent of empty beds — what vacancy costs each month
+
+
+class NavCounts(BaseModel):
+    openItems: int
+    overdueResidents: int
+    urgentComplaints: int
+    renewalsDue: int
+
+
+SearchKind = Literal["tenant", "room", "lead"]
+
+
+class SearchResult(BaseModel):
+    kind: SearchKind
+    id: int
+    title: str
+    subtitle: str
+    link: str  # frontend route that opens/highlights it
 
 
 # ---- Operations: complaints ----

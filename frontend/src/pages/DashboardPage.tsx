@@ -55,7 +55,11 @@ export function DashboardPage() {
         <StatTile
           label="Occupancy"
           value={`${summary.occupancyPct}%`}
-          sub={`${summary.occupiedBeds} of ${summary.totalBeds} beds · ${summary.vacantBeds} vacant`}
+          sub={
+            summary.vacantBeds > 0
+              ? `${summary.vacantBeds} empty · ${inrCompact(summary.vacantRentPerMonth)}/mo not coming in`
+              : `All ${summary.totalBeds} beds let`
+          }
         />
         <StatTile
           label="Collected this month"

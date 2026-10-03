@@ -41,6 +41,7 @@ export interface Bed {
   rentState: BedRentState;
   daysLate: number | null;
   outstanding: number; // rent due today or earlier and still unpaid
+  vacantSince: string | null; // last resident's move-out date, if vacant and ever let
 }
 
 // ---- Leads ----
@@ -118,6 +119,8 @@ export interface RentRecord {
   amountPaid: number;
   paidDate: string | null; // date the month became fully paid
   status: PaymentStatus;
+  tenantPhone: string;
+  latestTransactionId: number | null; // newest receipt for this month, if any
 }
 
 export type ManualPaymentMethod = "cash" | "upi" | "bank" | "other";
@@ -135,6 +138,17 @@ export interface PaymentTransaction {
   paidDate: string;
   method: PaymentMethod;
   note: string;
+  tenantPhone: string;
+  receiptNumber: string;
+}
+
+export interface Receipt extends PaymentTransaction {
+  propertyName: string;
+  propertyAddress: string;
+  monthRent: number;
+  paidSoFar: number; // for that month, including this receipt
+  balance: number; // still owed for that month
+  receivedBy: string | null;
 }
 
 export interface RentSummary {
@@ -183,6 +197,22 @@ export interface DashboardSummary {
   moveOutsToday: { tenantId: number; name: string; roomNumber: string; bedLabel: string }[];
   followUpsToday: { leadId: number; name: string; phone: string }[];
   rentOverdueCount: number;
+  vacantRentPerMonth: number; // listed rent of empty beds — what vacancy costs each month
+}
+
+export interface NavCounts {
+  openItems: number;
+  overdueResidents: number;
+  urgentComplaints: number;
+  renewalsDue: number;
+}
+
+export interface SearchResult {
+  kind: "tenant" | "room" | "lead";
+  id: number;
+  title: string;
+  subtitle: string;
+  link: string; // frontend route that opens/highlights it
 }
 
 // ---- Operations: complaints ----
@@ -281,4 +311,25 @@ export interface ProfitAndLoss {
   collectionRatePct: number | null;
   previous: PnlMonth | null;
   trend: PnlMonth[]; // last 6 months, oldest first
+}
+
+// ---- Tenant import (CSV saved from Excel) ----
+
+export interface TenantImportRow {
+  name: string;
+  phone: string;
+  roomNumber: string;
+  bedLabel: string;
+  moveInDate: string; // YYYY-MM-DD
+  rentDueDay: number;
+  rentAmount?: number;
+  depositAmount: number;
+  agreementExpiry: string; // YYYY-MM-DD
+}
+
+export interface TenantImportResult {
+  ok: boolean;
+  dryRun: boolean;
+  created: number;
+  errors: { row: number; message: string }[]; // row is 1-based, header excluded
 }
