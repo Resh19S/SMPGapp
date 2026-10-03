@@ -85,7 +85,9 @@ live `shared/contract.ts`, and resolve the open client questions first —
 resident login method (SMS OTP cost), payment gateway (or none),
 backend hosting/deployment (the app can't work against a laptop), and
 consent/storage for real ID documents (DPDP Act). The client-facing
-question list and rough pricing live in `private/DEMO_CHECKLIST.md` (local only, gitignored).
+question list lives in `private/CLIENT_DECISIONS.md`, pricing in
+`private/PRICING.md`, the demo run-sheet in `private/DEMO_SCRIPT.md`
+(all local only, gitignored).
 
 Rough fee shape to flag to the client when the time comes (not
 committed numbers, just categories):

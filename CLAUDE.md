@@ -34,14 +34,25 @@ how payments will work. Added so far: "Now" decision-queue dashboard, dues
 ageing, floor-wise bed grid coloured by rent state, part payments +
 collection chart + deposits held, Operations (complaints, move-out →
 inspection → deposit settlement). Our own additions beyond the video:
-lead pipeline, agreement renewals with rent history, owner-only monthly
-Profit & Loss (cash basis) with expense logging.
+lead pipeline (+ lead → move-in), agreement renewals with rent history,
+owner-only monthly Profit & Loss (cash basis) with expense logging,
+printable receipts, WhatsApp click-to-chat reminders/receipts (wa.me
+links — no paid API), Excel import/export, global search, vacancy cost.
+
+## Repo workflow
+GitHub `origin` = `Resh19S/SMPGapp`. Claude commits; **the user pushes
+manually — never `git push`**. `private/` (pricing, client questions, demo
+script) is gitignored on purpose; never put client-confidential content in
+tracked files. CI (`.github/workflows/ci.yml`) runs backend tests, the
+frontend build and a contract-mirror check on every push.
 
 ## Production readiness
 `docs/ARCHITECTURE.md` is the plan for running this as a SaaS: booking-style
 concurrency rules (built + tested), PostgreSQL (not Cassandra), document
 storage/security, multi-tenancy (`org_id`) as the #1 gap before a second
-customer. Backend tests: `cd backend && .venv/bin/pytest`.
+customer. `docs/SECURITY.md` is the security model. Backend tests:
+`cd backend && .venv/bin/pytest`. Browser checks (feature flows, slow-network
+stress, layout at 1440/1280/1024): `e2e/README.md` — run them after UI changes.
 
 ## Decisions locked for v1 (superseding "open questions" in CONTEXT.md)
 - **Scope:** one building/property to start. Schema supports more
@@ -85,4 +96,6 @@ cp .env.local.example .env.local
 npm run dev
 ```
 Demo logins (from `seed.py`): `owner` / `owner123` (owner role),
-`staff` / `staff123` and `ravi` / `ravi1234` (staff role).
+`staff` / `staff123` and `ravi` / `ravi1234` (staff role). They're shown on
+the sign-in page only if `VITE_SHOW_DEMO_LOGINS=true`. On a live server
+never run `seed.py`; use `backend/manage.py create-owner` / `create-property`.

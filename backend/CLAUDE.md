@@ -75,7 +75,17 @@ this week, then by ₹ at risk), dues ageing buckets, and a next-seven-days
 list. Rent under 30 days late rolls up into one line so it can't bury
 everything else; add new item kinds there rather than new dashboard fields.
 
+## Go-live helpers
+`manage.py create-owner|create-property` (live servers — never `seed.py`).
+`POST /beds/bulk` (all-or-nothing rooms × labels), `POST /tenants/import`
+(CSV rows validated per row, `dryRun` then all-or-nothing),
+`PATCH /tenants/{id}` (name/phone only — money terms change via renewal or
+settlement), `GET /payments/transactions/{id}` (receipt), `GET /search`,
+`GET /dashboard/counts` (sidebar badges).
+
 ## Auth
+`StaffUser.token_version` is embedded in every JWT ("tv"); bumping it
+(password change/reset, deactivation) revokes all of that user's sessions.
 JWT (`pyjwt`), bcrypt via the `bcrypt` package directly — not
 `passlib`, which has a known incompatibility with modern `bcrypt`
 releases (`AttributeError: module 'bcrypt' has no attribute

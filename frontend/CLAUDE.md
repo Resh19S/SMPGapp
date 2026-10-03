@@ -23,6 +23,20 @@ Shared building blocks, use these before writing new CSS:
 - `src/components/common/StatTile.tsx` — dashboard/rent-tracker stat cards
 - `src/pages/PageLayout.module.css` — page header/toggle/filter-bar layout
 
+## Patterns to reuse (each fixed a real bug)
+- **Any fetch keyed on changing state** (filters, toggles, months, search):
+  use `lib/useLatestRequest.ts` so a slow old response can't overwrite a
+  newer one. Never feed a component data for a different selection than
+  the one on screen (the Rent Tracker blank-screen bug).
+- Mutating handlers always `catch` and show `ApiError.message`; row-level
+  controls are disabled while their save is in flight.
+- `api/client.ts` handles 401 globally (logout → `/login?expired=1`).
+- Form rows are `minmax(0, 1fr)` grids; inputs are `width: 100%`.
+- Property name comes from `store/propertyStore.ts` — never hardcode "Sunrise PG".
+- WhatsApp = `lib/whatsapp.ts` (wa.me links); Excel = `lib/csv.ts`.
+- After UI changes run the browser checks in `../e2e/` (layout QA must stay
+  clean at 1440/1280/1024; the receipt stamp "overlap" is a known false positive).
+
 ## API contract
 `src/types/contract.ts` mirrors `../shared/contract.ts` exactly. Don't
 add a field here without adding it there and in
