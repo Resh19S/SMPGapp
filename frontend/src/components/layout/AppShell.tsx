@@ -19,6 +19,7 @@ const NAV_ITEMS: { to: string; label: string; end?: boolean; badge?: BadgeKey; b
   { to: "/rent", label: "Rent Tracker", badge: "overdueResidents", badgeTitle: "residents behind on rent" },
   { to: "/operations", label: "Operations", badge: "urgentComplaints", badgeTitle: "urgent complaints" },
   { to: "/profit-loss", label: "Profit & Loss", ownerOnly: true },
+  { to: "/activity", label: "Activity", ownerOnly: true },
   { to: "/staff", label: "Staff Access", ownerOnly: true },
 ];
 

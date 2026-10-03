@@ -59,7 +59,7 @@ def list_complaints(
 def create_complaint(
     request: CreateComplaintRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     room_number = request.roomNumber.strip()
     if request.tenantId is not None:
@@ -77,6 +77,11 @@ def create_complaint(
         assigned_to_id=_active_staff(db, request.assignedToId).id if request.assignedToId else None,
     )
     db.add(complaint)
+    db.flush()
+    audit.record(
+        db, user, "complaint.created", "complaint", complaint.id,
+        f"{complaint.title}{' · room ' + complaint.room_number if complaint.room_number else ''} ({complaint.priority})",
+    )
     db.commit()
     db.refresh(complaint)
     return serialize_complaint(complaint)
@@ -87,12 +92,21 @@ def update_complaint(
     complaint_id: int,
     request: UpdateComplaintRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     complaint = db.get(Complaint, complaint_id)
     if complaint is None:
         raise HTTPException(status_code=404, detail="Complaint not found")
     data = request.model_dump(exclude_unset=True)
+    changes = []
+    if "status" in data and data["status"] != complaint.status:
+        changes.append(f"status {complaint.status} → {data['status']}")
+    if "priority" in data and data["priority"] != complaint.priority:
+        changes.append(f"priority {complaint.priority} → {data['priority']}")
+    if "assignedToId" in data and data["assignedToId"] != complaint.assigned_to_id:
+        changes.append("assignment changed")
+    if changes:
+        audit.record(db, user, "complaint.updated", "complaint", complaint.id, f"{complaint.title}: " + "; ".join(changes))
     if "status" in data:
         complaint.status = data["status"]
         complaint.resolved_at = clock.utcnow() if data["status"] == "resolved" else None
@@ -136,12 +150,16 @@ def update_move_out(
     notice_id: int,
     request: UpdateNoticeRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     notice = _open_notice(db, notice_id)
     if request.plannedMoveOutDate is not None:
         if request.plannedMoveOutDate < notice.tenant.move_in_date:
             raise HTTPException(status_code=400, detail="Move-out date cannot precede move-in date")
+        audit.record(
+            db, user, "moveout.date_changed", "move_out_notice", notice.id,
+            f"{notice.tenant.name}: {audit.d(notice.planned_move_out_date)} → {audit.d(request.plannedMoveOutDate)}",
+        )
         notice.planned_move_out_date = request.plannedMoveOutDate
     db.commit()
     db.refresh(notice)
@@ -153,9 +171,10 @@ def schedule_inspection(
     notice_id: int,
     request: ScheduleInspectionRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     notice = _open_notice(db, notice_id)
+    audit.record(db, user, "moveout.inspection", "move_out_notice", notice.id, f"{notice.tenant.name}: inspection {audit.d(request.inspectionDate)}")
     notice.inspection_date = request.inspectionDate
     notice.status = "inspection-scheduled"
     db.commit()
@@ -168,10 +187,11 @@ def add_deduction(
     notice_id: int,
     request: AddDeductionRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     notice = _open_notice(db, notice_id)
     notice.deductions.append(SettlementDeduction(label=request.label.strip(), amount=request.amount))
+    audit.record(db, user, "moveout.deduction_added", "move_out_notice", notice.id, f"{notice.tenant.name}: {request.label.strip()} ₹{request.amount:,.2f}")
     db.commit()
     db.refresh(notice)
     return serialize_notice(notice)
@@ -182,12 +202,13 @@ def remove_deduction(
     notice_id: int,
     deduction_id: int,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     notice = _open_notice(db, notice_id)
     deduction = db.get(SettlementDeduction, deduction_id)
     if deduction is None or deduction.notice_id != notice.id:
         raise HTTPException(status_code=404, detail="Deduction not found")
+    audit.record(db, user, "moveout.deduction_removed", "move_out_notice", notice.id, f"{notice.tenant.name}: {deduction.label} ₹{deduction.amount:,.2f}")
     db.delete(deduction)
     db.commit()
     db.refresh(notice)

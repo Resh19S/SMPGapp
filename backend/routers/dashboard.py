@@ -2,7 +2,7 @@ import datetime
 from collections import defaultdict
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 import clock
 from auth import get_current_user
@@ -106,7 +106,7 @@ def _decision_queue(db: Session, today: datetime.date, overdue: list[Payment]) -
         )
 
     # Complaints: urgent ones always surface; normal ones only if nobody has picked them up in 2 days.
-    for c in db.query(Complaint).filter(Complaint.status != "resolved").all():
+    for c in db.query(Complaint).options(joinedload(Complaint.assigned_to)).filter(Complaint.status != "resolved").all():
         hours = int((now - c.created_at).total_seconds() // 3600)
         who = f"Assigned to {c.assigned_to.name}" if c.assigned_to else "Unassigned"
         if c.priority == "urgent":
@@ -127,7 +127,7 @@ def _decision_queue(db: Session, today: datetime.date, overdue: list[Payment]) -
         )
 
     # Move-outs: settlement is due, or the exit is close and nobody's booked the inspection.
-    for n in db.query(MoveOutNotice).filter(MoveOutNotice.status != "settled").all():
+    for n in db.query(MoveOutNotice).options(joinedload(MoveOutNotice.tenant).joinedload(Tenant.bed)).filter(MoveOutNotice.status != "settled").all():
         days_to_exit = (n.planned_move_out_date - today).days
         deposit = n.tenant.deposit_amount
         if days_to_exit <= 0:
@@ -164,7 +164,7 @@ def _decision_queue(db: Session, today: datetime.date, overdue: list[Payment]) -
                 )
             )
 
-    active = db.query(Tenant).filter(Tenant.move_out_date.is_(None)).all()
+    active = db.query(Tenant).options(joinedload(Tenant.bed), joinedload(Tenant.notice), selectinload(Tenant.documents)).filter(Tenant.move_out_date.is_(None)).all()
 
     # Agreements: a lapsed or lapsing agreement with no notice means a renewal conversation.
     for t in active:
@@ -225,10 +225,10 @@ def _next_seven_days(db: Session, today: datetime.date) -> list[UpcomingEvent]:
     end = today + datetime.timedelta(days=7)
     events: list[UpcomingEvent] = []
 
-    for t in db.query(Tenant).filter(Tenant.move_in_date > today, Tenant.move_in_date <= end).all():
+    for t in db.query(Tenant).options(joinedload(Tenant.bed), joinedload(Tenant.notice), selectinload(Tenant.documents)).filter(Tenant.move_in_date > today, Tenant.move_in_date <= end).all():
         events.append(UpcomingEvent(date=t.move_in_date, kind="move-in", title=f"{t.name} moves in", detail=f"Room {_room(t)}"))
 
-    for n in db.query(MoveOutNotice).filter(MoveOutNotice.status != "settled").all():
+    for n in db.query(MoveOutNotice).options(joinedload(MoveOutNotice.tenant).joinedload(Tenant.bed)).filter(MoveOutNotice.status != "settled").all():
         if today <= n.planned_move_out_date <= end:
             events.append(
                 UpcomingEvent(
@@ -243,7 +243,7 @@ def _next_seven_days(db: Session, today: datetime.date) -> list[UpcomingEvent]:
                 UpcomingEvent(date=n.inspection_date, kind="inspection", title=f"Exit inspection — {n.tenant.name}", detail=f"Room {_room(n.tenant)}")
             )
 
-    for t in db.query(Tenant).filter(
+    for t in db.query(Tenant).options(joinedload(Tenant.bed), joinedload(Tenant.notice), selectinload(Tenant.documents)).filter(
         Tenant.move_out_date.is_(None), Tenant.agreement_expiry >= today, Tenant.agreement_expiry <= end
     ).all():
         events.append(UpcomingEvent(date=t.agreement_expiry, kind="agreement-expiry", title=f"{t.name}'s agreement ends", detail=f"Room {_room(t)}"))
@@ -262,11 +262,11 @@ def get_dashboard(db: Session = Depends(get_db), _user: StaffUser = Depends(get_
     today = clock.today()
     ensure_payments_up_to_date(db, today)
 
-    beds = [serialize_bed(b, today) for b in db.query(Bed).all()]
+    beds = [serialize_bed(b, today) for b in db.query(Bed).options(selectinload(Bed.tenants).selectinload(Tenant.payments)).all()]
     total_beds = len(beds)
     occupied_beds = sum(1 for b in beds if b.status == "occupied")
 
-    tenants = db.query(Tenant).all()
+    tenants = db.query(Tenant).options(joinedload(Tenant.bed), joinedload(Tenant.notice), selectinload(Tenant.documents)).all()
     move_ins_today = [
         MoveEntry(tenantId=t.id, name=t.name, roomNumber=t.bed.room_number, bedLabel=t.bed.bed_label)
         for t in tenants
@@ -281,7 +281,7 @@ def get_dashboard(db: Session = Depends(get_db), _user: StaffUser = Depends(get_
     leads_due = db.query(Lead).filter(Lead.follow_up_date == today, Lead.status != "lost").all()
     follow_ups_today = [FollowUpEntry(leadId=l.id, name=l.name, phone=l.phone) for l in leads_due]
 
-    payments = db.query(Payment).all()
+    payments = db.query(Payment).options(joinedload(Payment.tenant).joinedload(Tenant.bed), joinedload(Payment.tenant).joinedload(Tenant.notice)).all()
     overdue = [p for p in payments if payment_status(p, today) == "overdue"]
 
     this_month = today.strftime("%Y-%m")
@@ -295,7 +295,7 @@ def get_dashboard(db: Session = Depends(get_db), _user: StaffUser = Depends(get_
             AgeingBucket(label=label, amount=sum(outstanding_amount(p) for p in in_bucket), count=len(in_bucket))
         )
 
-    open_complaints = db.query(Complaint).filter(Complaint.status != "resolved").all()
+    open_complaints = db.query(Complaint).options(joinedload(Complaint.assigned_to)).filter(Complaint.status != "resolved").all()
     urgent = [c for c in open_complaints if c.priority == "urgent"]
     oldest_urgent_hours = (
         int((clock.utcnow() - min(c.created_at for c in urgent)).total_seconds() // 3600) if urgent else None
@@ -329,12 +329,12 @@ def nav_counts(db: Session = Depends(get_db), _user: StaffUser = Depends(get_cur
     """Small numbers for the sidebar badges."""
     today = clock.today()
     ensure_payments_up_to_date(db, today)
-    overdue = [p for p in db.query(Payment).all() if payment_status(p, today) == "overdue"]
+    overdue = [p for p in db.query(Payment).options(joinedload(Payment.tenant).joinedload(Tenant.bed), joinedload(Payment.tenant).joinedload(Tenant.notice)).all() if payment_status(p, today) == "overdue"]
     urgent = db.query(Complaint).filter(Complaint.status != "resolved", Complaint.priority == "urgent").count()
     soon = today + datetime.timedelta(days=30)
     renewals = sum(
         1
-        for t in db.query(Tenant).filter(Tenant.move_out_date.is_(None), Tenant.agreement_expiry <= soon).all()
+        for t in db.query(Tenant).options(joinedload(Tenant.bed), joinedload(Tenant.notice), selectinload(Tenant.documents)).filter(Tenant.move_out_date.is_(None), Tenant.agreement_expiry <= soon).all()
         if t.notice is None
     )
     return NavCounts(

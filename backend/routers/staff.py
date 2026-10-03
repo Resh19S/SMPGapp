@@ -28,7 +28,7 @@ def staff_directory(db: Session = Depends(get_db), _user: StaffUser = Depends(ge
 def create_staff(
     request: CreateStaffRequest,
     db: Session = Depends(get_db),
-    _owner: StaffUser = Depends(require_owner),
+    owner: StaffUser = Depends(require_owner),
 ):
     if db.query(StaffUser).filter(StaffUser.username == request.username).first():
         raise HTTPException(status_code=409, detail="Username already exists")
@@ -39,6 +39,8 @@ def create_staff(
         role=request.role,
     )
     db.add(user)
+    db.flush()
+    audit.record(db, owner, "staff.created", "staff_user", user.id, f"{user.username} ({user.role})")
     db.commit()
     db.refresh(user)
     return StaffUserOut.model_validate(user, from_attributes=True)

@@ -5,7 +5,10 @@
   "scripts": {
     "layout": "node layout-qa.js",
     "stress": "node stress.js",
-    "flows": "node flows.js"
+    "flows": "node flows.js",
+    "audit": "node audit.js",
+    "multiuser": "node multiuser.js",
+    "load": "node load.js"
   },
   "dependencies": {
     "playwright-core": "1.47.2"

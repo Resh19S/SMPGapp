@@ -183,7 +183,7 @@ def delete_expense(
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
     audit.record(
-        db, owner, "expense.deleted", "expense", expense.id, f"₹{expense.amount:,.2f} {expense.category} on {expense.spent_on}"
+        db, owner, "expense.deleted", "expense", expense.id, f"₹{expense.amount:,.2f} {expense.category} on {audit.d(expense.spent_on)}"
     )
     db.delete(expense)
     db.commit()

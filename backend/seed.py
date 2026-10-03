@@ -17,6 +17,7 @@ from database import Base, SessionLocal, engine
 from routers.payments import add_payment, ensure_payments_up_to_date
 from models.db_models import (
     AgreementRenewal,
+    AuditEvent,
     Bed,
     Complaint,
     Expense,
@@ -309,6 +310,32 @@ def run():
         ]
         for name, phone, source, status, follow_up, notes in leads_plan:
             db.add(Lead(name=name, phone=phone, source=source, status=status, follow_up_date=follow_up, notes=notes))
+
+        # Activity history: payments were logged at seed time — move each to its
+        # real payment date (during working hours), and add a believable trail
+        # of sign-ins and complaint logging so the Activity page reads naturally.
+        db.flush()
+        for event in db.query(AuditEvent).filter(AuditEvent.action == "payment.recorded").all():
+            paid_on = datetime.datetime.strptime(event.detail.rsplit(" on ", 1)[1], "%d/%m/%Y").date()
+            ist_offset = datetime.timedelta(hours=5, minutes=30)
+            at = datetime.datetime.combine(paid_on, datetime.time(rng.randint(9, 18), rng.randint(0, 59))) - ist_offset
+            if at > now:
+                # Seeding early in the day: today's payments can't be in the future,
+                # but they must still fall on today — between midnight IST and now.
+                day_start = datetime.datetime.combine(paid_on, datetime.time(0, 1)) - ist_offset
+                at = day_start + (now - day_start) * rng.random()
+            event.at = at
+        for days_back in range(14, 0, -1):
+            day = today - datetime.timedelta(days=days_back)
+            for who, hour in ((staff, 9), (owner, 19)):
+                if rng.random() < 0.85:
+                    db.add(AuditEvent(user_id=who.id, action="auth.login", entity="staff_user", entity_id=who.id,
+                                      detail="from 192.168.1.20", at=datetime.datetime.combine(day, datetime.time(hour - 5, rng.randint(0, 59)))))
+        db.add(AuditEvent(user_id=None, action="auth.login_failed", entity="staff_user", entity_id=None,
+                          detail="username 'admin' from 103.21.44.9", at=now - datetime.timedelta(days=2, hours=3)))
+        for c in db.query(Complaint).all():
+            db.add(AuditEvent(user_id=staff.id, action="complaint.created", entity="complaint", entity_id=c.id,
+                              detail=f"{c.title}{' · room ' + c.room_number if c.room_number else ''} ({c.priority})", at=c.created_at))
 
         db.commit()
         print(f"Seeded: 1 property, {len(beds)} beds, {len(tenants)} tenants, {len(complaints)} complaints, {len(leads_plan)} leads, and rent history.")

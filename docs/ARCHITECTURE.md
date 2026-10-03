@@ -44,7 +44,7 @@ bad data.
 
 ### Tested
 
-`backend/tests/`, 127 tests. Run with `cd backend && .venv/bin/pytest`.
+`backend/tests/`, 154 tests, plus browser and load checks in `e2e/`. Run with `cd backend && .venv/bin/pytest`.
 They cover:
 
 - **Races, fired from real parallel threads:** two staff booking one bed →

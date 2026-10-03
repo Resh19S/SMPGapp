@@ -629,3 +629,17 @@ class PnlOut(BaseModel):
     collectionRatePct: Optional[float]
     previous: Optional[PnlMonth]
     trend: list[PnlMonth]  # last 6 months ending at periodMonth, oldest first
+
+
+# ---- Activity (audit log, owner only) ----
+
+ActivityArea = Literal["auth", "payment", "tenant", "lead", "bed", "complaint", "moveout", "expense", "staff", "other"]
+
+
+class ActivityEntry(BaseModel):
+    id: int
+    at: datetime.datetime  # UTC
+    userName: Optional[str]  # None for system actions or failed logins with an unknown username
+    action: str  # e.g. "payment.recorded"
+    area: ActivityArea
+    detail: str

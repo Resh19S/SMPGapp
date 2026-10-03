@@ -1,6 +1,13 @@
+import datetime
+
 from sqlalchemy.orm import Session
 
 from models.db_models import AuditEvent, StaffUser
+
+
+def d(value: datetime.date) -> str:
+    """Dates in log details read like the rest of the app: DD/MM/YYYY."""
+    return value.strftime("%d/%m/%Y")
 
 
 def record(db: Session, user: StaffUser | None, action: str, entity: str, entity_id: int | None, detail: str = "") -> None:

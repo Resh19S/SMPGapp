@@ -129,6 +129,7 @@ function detect() {
       ["operations", "/operations", "text=Move-outs"],
       ["pnl", "/profit-loss", "text=Statement"],
       ["staff", "/staff", "tbody tr"],
+      ["activity", "/activity", "tbody tr"],
     ];
     for (const [name, url, ready] of pages) {
       await page.goto(APP + url);

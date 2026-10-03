@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 import audit
 import clock
@@ -44,7 +44,9 @@ def list_tenants(
     db: Session = Depends(get_db),
     _user: StaffUser = Depends(get_current_user),
 ):
-    query = db.query(Tenant)
+    query = db.query(Tenant).options(
+        joinedload(Tenant.bed), joinedload(Tenant.notice), selectinload(Tenant.documents), selectinload(Tenant.renewals)
+    )
     if not includeMovedOut:
         query = query.filter(Tenant.move_out_date.is_(None))
     tenants = query.order_by(Tenant.move_in_date.desc()).all()
@@ -240,7 +242,7 @@ def give_notice(
             planned_move_out_date=request.plannedMoveOutDate,
         )
     )
-    audit.record(db, user, "tenant.notice", "tenant", tenant.id, f"leaving {request.plannedMoveOutDate}")
+    audit.record(db, user, "tenant.notice", "tenant", tenant.id, f"leaving {audit.d(request.plannedMoveOutDate)}")
     try:
         db.commit()
     except IntegrityError:
@@ -317,7 +319,7 @@ def renew_agreement(
         "tenant.renewed",
         "tenant",
         tenant.id,
-        f"to {request.newExpiry}; rent ₹{previous_rent:,.0f} → ₹{request.newRent:,.0f} from {request.effectiveFrom}",
+        f"to {audit.d(request.newExpiry)}; rent ₹{previous_rent:,.0f} → ₹{request.newRent:,.0f} from {request.effectiveFrom}",
     )
     db.commit()
     db.refresh(tenant)
@@ -330,7 +332,7 @@ def upload_document(
     document_id: int,
     request: UploadDocumentRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     tenant = _get_tenant(db, tenant_id)
     doc = db.get(TenantDocument, document_id)
@@ -338,6 +340,7 @@ def upload_document(
         raise HTTPException(status_code=404, detail="Document not found")
     doc.file_name = request.fileName
     doc.uploaded_at = clock.utcnow()
+    audit.record(db, user, "document.uploaded", "tenant", tenant.id, f"{tenant.name}: {doc.label} ({request.fileName})")
     db.commit()
     db.refresh(tenant)
     return serialize_tenant(tenant)

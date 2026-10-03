@@ -37,7 +37,8 @@ inspection → deposit settlement). Our own additions beyond the video:
 lead pipeline (+ lead → move-in), agreement renewals with rent history,
 owner-only monthly Profit & Loss (cash basis) with expense logging,
 printable receipts, WhatsApp click-to-chat reminders/receipts (wa.me
-links — no paid API), Excel import/export, global search, vacancy cost.
+links — no paid API), Excel import/export, global search, vacancy cost,
+owner-only Activity log (every change and sign-in, who/when).
 
 ## Repo workflow
 GitHub `origin` = `Resh19S/SMPGapp`. Claude commits; **the user pushes
@@ -51,8 +52,10 @@ frontend build and a contract-mirror check on every push.
 concurrency rules (built + tested), PostgreSQL (not Cassandra), document
 storage/security, multi-tenancy (`org_id`) as the #1 gap before a second
 customer. `docs/SECURITY.md` is the security model. Backend tests:
-`cd backend && .venv/bin/pytest`. Browser checks (feature flows, slow-network
-stress, layout at 1440/1280/1024): `e2e/README.md` — run them after UI changes.
+`cd backend && .venv/bin/pytest`. Browser checks (full feature audit, multi-user,
+load, slow-network stress, layout at 1440/1280/1024): `e2e/README.md` — run
+them after UI changes. Every write endpoint must `audit.record(...)` (dates
+via `audit.d()`, DD/MM/YYYY) so it shows on the Activity page.
 
 ## Decisions locked for v1 (superseding "open questions" in CONTEXT.md)
 - **Scope:** one building/property to start. Schema supports more

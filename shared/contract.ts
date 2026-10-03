@@ -333,3 +333,16 @@ export interface TenantImportResult {
   created: number;
   errors: { row: number; message: string }[]; // row is 1-based, header excluded
 }
+
+// ---- Activity (audit log, owner only) ----
+
+export type ActivityArea = "auth" | "payment" | "tenant" | "lead" | "bed" | "complaint" | "moveout" | "expense" | "staff" | "other";
+
+export interface ActivityEntry {
+  id: number;
+  at: string; // UTC, no timezone suffix
+  userName: string | null; // null for failed sign-ins with an unknown username
+  action: string; // e.g. "payment.recorded"
+  area: ActivityArea;
+  detail: string;
+}

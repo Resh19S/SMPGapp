@@ -154,7 +154,10 @@ def add_payment(
     db.flush()
     payment = db.get(Payment, payment_id)
     db.refresh(payment)
-    audit.record(db, user, "payment.recorded", "payment", payment_id, f"₹{amount:,.2f} via {method} on {paid_date}")
+    audit.record(
+        db, user, "payment.recorded", "payment", payment_id,
+        f"{payment.tenant.name} · {payment.period_month}: ₹{amount:,.2f} via {method} on {audit.d(paid_date)}",
+    )
     return payment
 
 

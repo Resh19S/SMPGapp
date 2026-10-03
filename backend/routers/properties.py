@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 import audit
 import clock
 
 from auth import get_current_user
 from database import get_db
-from models.db_models import Bed, Property, StaffUser
+from models.db_models import Bed, Property, StaffUser, Tenant
 from models.schemas import (
     BedOut,
     BulkBedsRequest,
@@ -37,10 +37,12 @@ def list_properties(db: Session = Depends(get_db), _user: StaffUser = Depends(ge
 def create_property(
     request: CreatePropertyRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     prop = Property(name=request.name, address=request.address)
     db.add(prop)
+    db.flush()
+    audit.record(db, user, "property.created", "property", prop.id, prop.name)
     db.commit()
     db.refresh(prop)
     return prop
@@ -54,7 +56,7 @@ def list_beds(
 ):
     today = clock.today()
     ensure_payments_up_to_date(db, today)
-    query = db.query(Bed)
+    query = db.query(Bed).options(selectinload(Bed.tenants).selectinload(Tenant.payments))
     if propertyId is not None:
         query = query.filter(Bed.property_id == propertyId)
     beds = query.order_by(Bed.floor, Bed.room_number, Bed.bed_label).all()
@@ -65,7 +67,7 @@ def list_beds(
 def create_bed(
     request: CreateBedRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     if db.get(Property, request.propertyId) is None:
         raise HTTPException(status_code=404, detail="Property not found")
@@ -78,6 +80,8 @@ def create_bed(
     )
     db.add(bed)
     try:
+        db.flush()
+        audit.record(db, user, "bed.created", "bed", bed.id, f"{bed.room_number}/{bed.bed_label} at ₹{bed.rent_amount:,.0f}")
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -133,11 +137,20 @@ def update_bed(
     bed_id: int,
     request: UpdateBedRequest,
     db: Session = Depends(get_db),
-    _user: StaffUser = Depends(get_current_user),
+    user: StaffUser = Depends(get_current_user),
 ):
     bed = db.get(Bed, bed_id)
     if bed is None:
         raise HTTPException(status_code=404, detail="Bed not found")
+    changes = []
+    if request.rentAmount is not None and request.rentAmount != bed.rent_amount:
+        changes.append(f"listed rent ₹{bed.rent_amount:,.0f} → ₹{request.rentAmount:,.0f}")
+    if request.roomNumber is not None and request.roomNumber != bed.room_number:
+        changes.append(f"room {bed.room_number} → {request.roomNumber}")
+    if request.bedLabel is not None and request.bedLabel != bed.bed_label:
+        changes.append(f"label {bed.bed_label} → {request.bedLabel}")
+    if changes:
+        audit.record(db, user, "bed.updated", "bed", bed.id, f"Bed {bed.room_number}/{bed.bed_label}: " + "; ".join(changes))
     if request.roomNumber is not None:
         bed.room_number = request.roomNumber
     if request.bedLabel is not None:

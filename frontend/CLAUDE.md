@@ -50,6 +50,7 @@ work is needed.
 - Auth token lives in `sessionStorage` (see `src/store/authStore.ts`),
   attached by `src/api/client.ts`'s `request()` helper automatically —
   don't hand-roll fetch calls elsewhere.
+- Owner-only pages today: Profit & Loss, Activity, Staff Access.
 - Role-gating (`owner` vs `staff`) happens both in `App.tsx`
   (`RequireOwner`) and by simply not rendering the nav link in
   `AppShell.tsx` — keep both in sync if a new owner-only page is added.

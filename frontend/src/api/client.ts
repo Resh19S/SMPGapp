@@ -1,5 +1,7 @@
 import { useAuthStore } from "../store/authStore";
 import type {
+  ActivityArea,
+  ActivityEntry,
   Bed,
   BedStatus,
   Complaint,
@@ -349,6 +351,17 @@ export function createExpense(data: {
 
 export function deleteExpense(expenseId: number): Promise<void> {
   return request(`/expenses/${expenseId}`, { method: "DELETE" });
+}
+
+// ---- Activity (owner only) ----
+
+export function listActivity(filters: { area?: ActivityArea; userId?: number; beforeId?: number; limit?: number } = {}): Promise<ActivityEntry[]> {
+  const params = new URLSearchParams();
+  if (filters.area) params.set("area", filters.area);
+  if (filters.userId) params.set("userId", String(filters.userId));
+  if (filters.beforeId) params.set("beforeId", String(filters.beforeId));
+  params.set("limit", String(filters.limit ?? 100));
+  return request(`/activity?${params}`);
 }
 
 export type { BedStatus };

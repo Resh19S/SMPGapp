@@ -38,13 +38,19 @@ def login(request: LoginRequest, http: Request, db: Session = Depends(get_db)):
     if any(len(_recent_failures(k, now)) >= MAX_FAILURES for k in keys):
         raise HTTPException(status_code=429, detail="Too many failed attempts. Try again in 15 minutes.")
 
+    ip = http.client.host if http.client else "unknown"
     user = db.query(StaffUser).filter(StaffUser.username == request.username.lower()).first()
     if user is None or not user.is_active or not verify_password(request.password, user.password_hash):
         for k in keys:
             _failures[k].append(now)
+        # Logged so the owner can spot someone guessing passwords (throttled above, so it can't flood).
+        audit.record(db, user, "auth.login_failed", "staff_user", user.id if user else None, f"username '{request.username[:40]}' from {ip}")
+        db.commit()
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     _failures.pop(keys[0], None)
+    audit.record(db, user, "auth.login", "staff_user", user.id, f"from {ip}")
+    db.commit()
     token = create_access_token(user)
     return LoginResponse(token=token, user=StaffUserOut.model_validate(user, from_attributes=True))
 

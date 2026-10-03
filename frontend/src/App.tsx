@@ -12,6 +12,7 @@ import { StaffPage } from "./pages/StaffPage";
 import { OperationsPage } from "./pages/OperationsPage";
 import { ProfitLossPage } from "./pages/ProfitLossPage";
 import { ReceiptPage } from "./pages/ReceiptPage";
+import { ActivityPage } from "./pages/ActivityPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -56,6 +57,14 @@ export default function App() {
             element={
               <RequireOwner>
                 <ProfitLossPage />
+              </RequireOwner>
+            }
+          />
+          <Route
+            path="/activity"
+            element={
+              <RequireOwner>
+                <ActivityPage />
               </RequireOwner>
             }
           />
