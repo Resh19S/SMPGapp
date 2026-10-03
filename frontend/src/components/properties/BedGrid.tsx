@@ -21,7 +21,10 @@ function daysSince(iso: string): number {
 
 function stampText(bed: Bed): string {
   if (bed.rentState === "late") return `${bed.daysLate}d late`;
-  if (bed.rentState === "vacant" && bed.vacantSince) return `Vacant ${daysSince(bed.vacantSince)}d`;
+  if (bed.rentState === "vacant" && bed.vacantSince) {
+    const days = daysSince(bed.vacantSince);
+    return days <= 0 ? "Vacant today" : `Vacant ${days}d`;
+  }
   return RENT_STATE_LABEL[bed.rentState];
 }
 
