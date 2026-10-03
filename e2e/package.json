@@ -1,0 +1,13 @@
+{
+  "name": "pg-rental-e2e",
+  "private": true,
+  "description": "Browser checks against a scratch copy of the app (never the real database).",
+  "scripts": {
+    "layout": "node layout-qa.js",
+    "stress": "node stress.js",
+    "flows": "node flows.js"
+  },
+  "dependencies": {
+    "playwright-core": "1.47.2"
+  }
+}

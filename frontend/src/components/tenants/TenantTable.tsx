@@ -19,7 +19,6 @@ export function TenantTable({ tenants, onSelect }: { tenants: Tenant[]; onSelect
         <thead>
           <tr>
             <th>Name</th>
-            <th>Room / Bed</th>
             <th>Phone</th>
             <th>Rent</th>
             <th>Move-in</th>
@@ -33,8 +32,10 @@ export function TenantTable({ tenants, onSelect }: { tenants: Tenant[]; onSelect
             const missingDocs = tenant.documents.filter((d) => !d.fileName).length;
             return (
               <tr key={tenant.id} onClick={() => onSelect(tenant)} style={{ cursor: "pointer" }}>
-                <td className={styles.name}>{tenant.name}</td>
-                <td>{tenant.roomNumber} / {tenant.bedLabel}</td>
+                <td className={styles.name}>
+                  {tenant.name}
+                  <span className={styles.sub}>Room {tenant.roomNumber}/{tenant.bedLabel}</span>
+                </td>
                 <td className={styles.mono}>{tenant.phone}</td>
                 <td className={styles.mono}>{inr(tenant.rentAmount)}</td>
                 <td className={styles.mono}>{formatDate(tenant.moveInDate)}</td>
@@ -49,10 +50,12 @@ export function TenantTable({ tenants, onSelect }: { tenants: Tenant[]; onSelect
                       ))}
                   </div>
                 </td>
-                <td>{missingDocs === 0 ? "Complete" : `${missingDocs} pending`}</td>
+                <td className={styles.nowrap}>{missingDocs === 0 ? "Complete" : `${missingDocs} missing`}</td>
                 <td>
                   {!tenant.isActive ? (
                     <StatusBadge tone="lost" label="moved out" />
+                  ) : tenant.moveInDate > todayISO() ? (
+                    <StatusBadge tone="booked" label={`moving in ${formatDate(tenant.moveInDate).slice(0, 5)}`} />
                   ) : tenant.notice ? (
                     <StatusBadge tone="due" label={`leaving ${formatDate(tenant.notice.plannedMoveOutDate).slice(0, 5)}`} />
                   ) : (

@@ -49,7 +49,7 @@ export function ComplaintTable({
                     {c.priority === "urgent" && <StatusBadge tone="overdue" label="urgent" />}
                     <span className={styles.name}>{c.title}</span>
                   </div>
-                  {c.description && <div className={styles.notes} style={{ maxWidth: 360, fontSize: "var(--text-xs)" }}>{c.description}</div>}
+                  {c.description && <div className={styles.notes} style={{ maxWidth: 300, fontSize: "var(--text-xs)" }}>{c.description}</div>}
                 </td>
                 <td className={styles.mono}>{c.roomNumber || "—"}</td>
                 <td>{CATEGORY_LABEL[c.category]}</td>

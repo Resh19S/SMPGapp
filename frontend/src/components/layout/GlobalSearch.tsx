@@ -18,6 +18,13 @@ export function GlobalSearch() {
   const [active, setActive] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const begin = useLatestRequest();
+  // Closing on blur is delayed so a click on a result still lands; refocusing
+  // or typing must cancel that pending close or the panel vanishes mid-search.
+  const closeTimer = useRef<number | null>(null);
+  const cancelClose = () => {
+    if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  };
 
   useEffect(() => {
     const term = query.trim();
@@ -85,11 +92,18 @@ export function GlobalSearch() {
         placeholder="Search residents, rooms, phone…  ( / )"
         value={query}
         onChange={(e) => {
+          cancelClose();
           setQuery(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+        onFocus={() => {
+          cancelClose();
+          setOpen(true);
+        }}
+        onBlur={() => {
+          cancelClose();
+          closeTimer.current = window.setTimeout(() => setOpen(false), 150);
+        }}
         onKeyDown={onKeyDown}
         role="combobox"
         aria-expanded={showPanel}

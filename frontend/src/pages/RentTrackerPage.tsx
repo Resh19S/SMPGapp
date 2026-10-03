@@ -227,7 +227,7 @@ export function RentTrackerPage() {
       {isLoading ? (
         <p className={pageStyles.loading}>Loading rent records…</p>
       ) : (
-        <RentTable records={filtered} propertyName={propertyName} onRecordPayment={setSelectedRecord} />
+        <RentTable records={filtered} propertyName={propertyName} showMonth={period === null} onRecordPayment={setSelectedRecord} />
       )}
 
       {selectedRecord && (

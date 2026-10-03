@@ -122,6 +122,10 @@ a { color: var(--color-teal); }
 
 ::selection { background: var(--color-brass-tint); }
 
+@media (max-width: 1180px) {
+  :root { --sidebar-width: 188px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

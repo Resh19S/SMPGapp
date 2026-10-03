@@ -133,3 +133,16 @@
 @media (max-width: 1080px) {
   .columns { grid-template-columns: 1fr; }
 }
+
+.mtd {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: var(--weight-regular);
+  color: var(--color-ink-faint);
+}
+
+.mtdNote {
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+  margin: calc(-1 * var(--space-1)) 0 var(--space-3);
+}

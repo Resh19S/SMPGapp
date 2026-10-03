@@ -23,3 +23,6 @@ private/
 
 # Client-supplied reference material
 *.mp4
+
+# Browser-check screenshots and downloads
+e2e/output/

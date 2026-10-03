@@ -36,7 +36,6 @@ export function LeadTable({
         <thead>
           <tr>
             <th>Name</th>
-            <th>Phone</th>
             <th>Source</th>
             <th>Status</th>
             <th>Follow-up</th>
@@ -47,8 +46,10 @@ export function LeadTable({
         <tbody>
           {leads.map((lead) => (
             <tr key={lead.id} id={`lead-${lead.id}`} className={lead.id === highlightId ? styles.rowFocus : undefined}>
-              <td className={styles.name}>{lead.name}</td>
-              <td className={styles.mono}>{lead.phone}</td>
+              <td className={styles.name}>
+                {lead.name}
+                <span className={styles.sub}>{lead.phone}</span>
+              </td>
               <td>{SOURCE_LABEL[lead.source]}</td>
               <td>
                 <div className={styles.statusCell}>

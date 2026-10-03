@@ -142,7 +142,16 @@ export function ProfitLossPage() {
 
           <div className={styles.columns}>
             <section className={`${pageStyles.panel} ${styles.statement}`} aria-label="Statement">
-              <h2 className={pageStyles.panelTitle}>Statement — {monthLabel(pnl.periodMonth)}</h2>
+              <h2 className={pageStyles.panelTitle}>
+                Statement — {monthLabel(pnl.periodMonth)}
+                {pnl.periodMonth === thisMonth && <span className={styles.mtd}> · month to date ({formatDate(todayISO()).slice(0, 5)})</span>}
+              </h2>
+              {pnl.periodMonth === thisMonth && (
+                <p className={styles.mtdNote}>
+                  The month isn't over: fixed costs like the lease are usually paid early, while rent keeps arriving — the
+                  figures settle by month end.
+                </p>
+              )}
               <table className={styles.ledger}>
                 <tbody>
                   <tr className={styles.groupRow}><th colSpan={2}>Income</th></tr>
