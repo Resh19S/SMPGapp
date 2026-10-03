@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { createTenant, getTenant, giveNotice, listTenants, renewAgreement, uploadTenantDocument } from "../api/client";
+import { createTenant, getTenant, giveNotice, listTenants, renewAgreement, updateTenant, uploadTenantDocument } from "../api/client";
 import { ImportTenantsModal } from "../components/tenants/ImportTenantsModal";
 import { downloadCsv } from "../lib/csv";
 import { formatDate } from "../lib/format";
@@ -85,6 +85,13 @@ export function TenantsPage() {
         !t.isActive ? "moved out" : t.notice ? `leaving ${formatDate(t.notice.plannedMoveOutDate)}` : "active",
       ])
     );
+  }
+
+  async function handleUpdateContact(data: { name: string; phone: string }) {
+    if (!selectedTenant) return;
+    const updated = await updateTenant(selectedTenant.id, data);
+    setSelectedTenant(updated);
+    setTenants((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
   }
 
   async function handleRenew(data: { newExpiry: string; newRent: number; effectiveFrom: string }) {
@@ -179,6 +186,7 @@ export function TenantsPage() {
           onUploadDocument={handleUploadDocument}
           onGiveNotice={handleGiveNotice}
           onRenew={handleRenew}
+          onUpdateContact={handleUpdateContact}
         />
       )}
     </div>

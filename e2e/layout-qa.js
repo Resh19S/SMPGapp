@@ -143,6 +143,10 @@ function detect() {
       ["dlg-lead-movein", "/leads", async () => page.locator("button:has-text('Move in')").first().click()],
       ["dlg-move-in", "/tenants", async () => page.click("text=+ Move in tenant")],
       ["dlg-tenant", "/tenants", async () => page.locator("div[class*=tableWrap] tbody tr").first().click()],
+      ["dlg-tenant-edit", "/tenants", async () => {
+        await page.locator("div[class*=tableWrap] tbody tr").first().click();
+        await page.click("text=Edit name / phone");
+      }],
       ["dlg-tenant-renew", "/tenants?filter=renewals", async () => {
         await page.locator("div[class*=tableWrap] tbody tr").first().click();
         await page.click("text=Renew agreement");

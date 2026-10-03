@@ -317,6 +317,19 @@ class TenantImportResult(BaseModel):
     errors: list[ImportRowError]
 
 
+class UpdateTenantRequest(BaseModel):
+    """Fix contact details. Money terms (rent, deposit, due day) change only
+    through renewal/settlement, so the payment history stays consistent."""
+
+    name: Optional[Name] = None
+    phone: Optional[Phone] = None
+
+    @model_validator(mode="after")
+    def _no_nulls(self):
+        _reject_explicit_nulls(self, ("name", "phone"))
+        return self
+
+
 class GiveNoticeRequest(BaseModel):
     noticeDate: Day
     plannedMoveOutDate: Day

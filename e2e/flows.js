@@ -102,6 +102,11 @@ const check = (name, ok, detail = "") => results.push(`${ok ? "PASS" : "FAIL"}  
   await page.locator("[role=option]:has(span:text-is('Imported One'))").click();
   await page.waitForSelector("[role=dialog]:has-text('Imported One')");
   check("Search opens the resident", true);
+  await page.click("text=Edit name / phone");
+  await page.fill("#edit-phone", "+91 98111 00009");
+  await page.click("[role=dialog] button:text-is('Save')");
+  await page.waitForSelector("[role=dialog] >> text=9811100009");
+  check("Edit phone normalises and saves", true);
 
   // --- Renewal with +5%
   await page.click("text=Renew agreement");

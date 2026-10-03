@@ -199,6 +199,11 @@ export function giveNotice(tenantId: number, noticeDate: string, plannedMoveOutD
   });
 }
 
+/** Contact details only — rent and deposit change through renewal/settlement. */
+export function updateTenant(tenantId: number, data: Partial<{ name: string; phone: string }>): Promise<Tenant> {
+  return request(`/tenants/${tenantId}`, { method: "PATCH", body: JSON.stringify(data) });
+}
+
 /** dryRun=true checks every row and writes nothing. */
 export function importTenants(rows: TenantImportRow[], dryRun: boolean): Promise<TenantImportResult> {
   return request(`/tenants/import?dryRun=${dryRun}`, { method: "POST", body: JSON.stringify({ rows }) });

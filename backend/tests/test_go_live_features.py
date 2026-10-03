@@ -193,3 +193,16 @@ def test_create_owner_once(client):
 def test_create_owner_rejects_short_password():
     with pytest.raises((manage.SetupError, ValueError)):
         manage.create_owner("A", "aaa", "short")
+
+
+# ---- Editing contact details ----
+
+def test_edit_tenant_name_and_phone(client, owner, prop):
+    tenant = move_in(client, owner, add_bed(client, owner, prop["id"])["id"])
+    res = client.patch(f"/tenants/{tenant['id']}", json={"name": "Rohan D. Deshmukh", "phone": "+91 98220 99999"}, headers=owner)
+    assert res.status_code == 200
+    assert (res.json()["name"], res.json()["phone"]) == ("Rohan D. Deshmukh", "9822099999")
+    assert client.patch(f"/tenants/{tenant['id']}", json={"phone": "123"}, headers=owner).status_code == 422
+    assert client.patch(f"/tenants/{tenant['id']}", json={"name": None}, headers=owner).status_code == 422
+    assert client.patch(f"/tenants/{tenant['id']}", json={"rentAmount": 1}, headers=owner).json()["rentAmount"] == 9500  # ignored
+    assert client.patch("/tenants/999", json={"name": "X"}, headers=owner).status_code == 404

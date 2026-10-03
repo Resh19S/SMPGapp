@@ -18,6 +18,7 @@ from models.schemas import (
     TenantImportResult,
     TenantImportRow,
     TenantOut,
+    UpdateTenantRequest,
     UploadDocumentRequest,
 )
 from serializers import rent_for_period, serialize_tenant
@@ -188,6 +189,28 @@ def import_tenants(
         db.rollback()
         raise HTTPException(status_code=409, detail="A bed in this sheet was just taken by someone else — check again and retry")
     return TenantImportResult(ok=True, dryRun=False, created=len(valid), errors=[])
+
+
+@router.patch("/{tenant_id}", response_model=TenantOut)
+def update_tenant(
+    tenant_id: int,
+    request: UpdateTenantRequest,
+    db: Session = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
+    tenant = _get_tenant(db, tenant_id)
+    changes = []
+    if request.name is not None and request.name != tenant.name:
+        changes.append(f"name {tenant.name} → {request.name}")
+        tenant.name = request.name
+    if request.phone is not None and request.phone != tenant.phone:
+        changes.append(f"phone {tenant.phone} → {request.phone}")
+        tenant.phone = request.phone
+    if changes:
+        audit.record(db, user, "tenant.updated", "tenant", tenant.id, "; ".join(changes))
+        db.commit()
+        db.refresh(tenant)
+    return serialize_tenant(tenant)
 
 
 @router.post("/{tenant_id}/notice", response_model=TenantOut, status_code=201)
