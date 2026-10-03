@@ -1,0 +1,25 @@
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 10px 2px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-sm);
+  transform: rotate(-2deg);
+  background: transparent;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.new { color: var(--color-status-new); }
+.visited { color: var(--color-status-visited); }
+.booked { color: var(--color-status-booked); }
+.lost { color: var(--color-status-lost); }
+.vacant { color: var(--color-status-vacant); }
+.occupied { color: var(--color-status-occupied); }
+.paid { color: var(--color-status-paid); }
+.due { color: var(--color-status-due); }
+.overdue { color: var(--color-status-overdue); }

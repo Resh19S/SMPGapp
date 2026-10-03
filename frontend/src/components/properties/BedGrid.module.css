@@ -1,0 +1,133 @@
+.floors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.floor {
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.floorHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.floorTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.floorMeta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+.rooms {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+  gap: var(--space-4) var(--space-5);
+}
+
+.roomHeader {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-faint);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px dashed var(--color-rule-strong);
+}
+
+.bedRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Brass room-key tag: rounded bottom, punched hole at the top. */
+.tag {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-4) var(--space-1) var(--space-2);
+  border: 1.5px solid currentColor;
+  border-radius: 5px 5px 18px 18px;
+  background: var(--color-paper-raised);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 120ms ease;
+}
+
+.tag:hover { box-shadow: var(--shadow-card); }
+.tag:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+
+.tagHole {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-paper);
+  border: 1.5px solid currentColor;
+}
+
+.bedLabel {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  line-height: 1.1;
+}
+
+.stamp {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.tenantName {
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Money states. Colour is never alone — the stamp text names the state too. */
+.paid { color: var(--color-status-paid); }
+.due { color: var(--color-status-occupied); }
+.due-today { color: var(--color-brass-strong); background: var(--color-status-due-tint); }
+.late { color: var(--color-status-overdue); background: var(--color-status-overdue-tint); }
+.reserved { color: var(--color-status-booked); border-style: dashed; }
+.vacant { color: var(--color-status-vacant); border-style: dashed; background: transparent; }
+
+.dimmed { opacity: 0.25; }
+
+.empty {
+  padding: var(--space-6);
+  color: var(--color-ink-faint);
+  text-align: center;
+}

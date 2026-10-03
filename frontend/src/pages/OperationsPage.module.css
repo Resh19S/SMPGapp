@@ -1,0 +1,27 @@
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.urgentNote {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-status-overdue);
+  margin-left: var(--space-3);
+  vertical-align: middle;
+}
+
+.moveOuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 520px) {
+  .moveOuts { grid-template-columns: 1fr; }
+}

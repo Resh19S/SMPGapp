@@ -1,0 +1,140 @@
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.detailGrid dt {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-faint);
+}
+
+.detailGrid dd {
+  font-size: var(--text-sm);
+  margin-top: 2px;
+}
+
+.mono { font-family: var(--font-mono); }
+
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-soft);
+  border-bottom: 1px solid var(--color-rule);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.docList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.docRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.docRow > span:first-child { flex: 1; }
+
+.docFile {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-status-paid);
+}
+
+.docMissing {
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.moveOutSection {
+  border-top: 1px solid var(--color-rule);
+  padding-top: var(--space-4);
+}
+
+.moveOutForm { max-width: 220px; }
+
+.movedOutNotice {
+  border-top: 1px solid var(--color-rule);
+  padding-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-ink-faint);
+}
+
+/* Agreement & renewals */
+.renewal {
+  margin-bottom: var(--space-5);
+}
+
+.renewalSummary {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  margin-bottom: var(--space-3);
+}
+
+.renewalForm {
+  border: 1px dashed var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.hikeRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.hikeRow input { flex: 1; min-width: 0; }
+
+.hikeChip {
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.hikeChip[aria-pressed="true"] {
+  border-color: var(--color-teal);
+  color: var(--color-teal);
+  box-shadow: inset 0 0 0 1px var(--color-teal);
+}
+
+.hikeChip:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+
+.renewalHistory {
+  list-style: none;
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.renewalHistory li {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: var(--space-2);
+  border-left: 2px solid var(--color-rule-strong);
+  padding-left: var(--space-2);
+}

@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Databases and their backups — real or demo tenant data never goes in git
+*.db
+*.db-wal
+*.db-shm
+*.db.bak*
+
+# Secrets
+.env
+.env.local
+
+# Node
+node_modules/
+dist/
+
+# Business-private notes (pricing floors, client questions) — kept local on purpose
+private/
+
+# Client-supplied reference material
+*.mp4

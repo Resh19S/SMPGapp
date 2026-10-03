@@ -1,0 +1,162 @@
+.card {
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.meta {
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+.leaving {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.leavingLabel {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-faint);
+}
+
+.leavingDate {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-brass-strong);
+}
+
+/* Progress as stamped steps along a ruled line. */
+.steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.step,
+.stepDone {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: var(--space-2);
+  border-top: 3px solid var(--color-rule);
+  color: var(--color-ink-faint);
+  display: flex;
+  flex-direction: column;
+}
+
+.stepDone {
+  border-top-color: var(--color-teal);
+  color: var(--color-teal);
+}
+
+.stepDate {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-regular);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Settlement ledger: right-aligned figures, double rule above the total. */
+.ledger {
+  font-size: var(--text-sm);
+  border-top: 1px solid var(--color-rule);
+}
+
+.ledgerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.ledgerRow dt {
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ledgerRow dd {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledgerTotal {
+  border-top: 3px double var(--color-rule-strong);
+  border-bottom: none;
+  font-weight: var(--weight-semibold);
+}
+
+.ledgerTotal dt { color: var(--color-ink); }
+.ledgerTotal dd { font-size: var(--text-lg); }
+
+.remove {
+  background: none;
+  border: none;
+  color: var(--color-ink-faint);
+  font-size: var(--text-base);
+  line-height: 1;
+}
+
+.remove:hover { color: var(--color-status-overdue); }
+.remove:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 1px; }
+
+.settledNote {
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-top: 1px dashed var(--color-rule-strong);
+  padding-top: var(--space-3);
+}
+
+/* Label on its own line, then the control(s) and the button. */
+.actionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.actionRow > label { grid-column: 1 / -1; }
+.actionRow input { width: 100%; min-width: 0; }
+.actionRow button { white-space: nowrap; }
+
+.actionRow:has(.amount) {
+  grid-template-columns: minmax(0, 1fr) 96px auto;
+}
+
+.settleRow {
+  margin-top: var(--space-2);
+}

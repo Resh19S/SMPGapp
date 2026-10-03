@@ -1,0 +1,138 @@
+.wrap {
+  position: relative;
+  width: 100%;
+}
+
+.svg {
+  display: block;
+  touch-action: pan-y;
+}
+
+.svg:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+.grid {
+  stroke: var(--color-rule);
+  stroke-width: 1;
+}
+
+.axisLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--color-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.reference {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1;
+}
+
+.refLabel {
+  font-size: 11px;
+  fill: var(--color-ink-soft);
+}
+
+.area {
+  fill: var(--color-teal);
+  opacity: 0.1;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-teal);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.endDot {
+  fill: var(--color-teal);
+  stroke: var(--color-paper-raised);
+  stroke-width: 2;
+}
+
+.endLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--color-ink);
+}
+
+.crosshair {
+  stroke: var(--color-ink-faint);
+  stroke-width: 1;
+}
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  min-width: 168px;
+}
+
+.tipDate {
+  font-family: var(--font-mono);
+  color: var(--color-ink-faint);
+  margin-bottom: 2px;
+}
+
+.tipRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink-soft);
+}
+
+.tipRow strong {
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+}
+
+.tipKey {
+  width: 12px;
+  height: 2px;
+  background: var(--color-teal);
+  border-radius: 1px;
+}
+
+.tipSub {
+  color: var(--color-ink-faint);
+  margin-top: 2px;
+}
+
+.tableView {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.tableView summary {
+  cursor: pointer;
+  color: var(--color-teal);
+}
+
+.tableView table {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tableView th,
+.tableView td {
+  text-align: left;
+  padding: 2px var(--space-3) 2px 0;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--color-ink-faint);
+}

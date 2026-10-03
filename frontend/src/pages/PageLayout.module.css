@@ -1,0 +1,145 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+}
+
+.subtitle {
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+
+.primaryAction {
+  background: var(--color-teal);
+  color: var(--color-chrome-text);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.primaryAction:hover { background: var(--color-teal-strong); }
+.primaryAction:focus-visible { outline: 2px solid var(--color-brass); outline-offset: 2px; }
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  margin-bottom: var(--space-4);
+}
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.error {
+  color: var(--color-status-overdue);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+}
+
+.loading {
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+}
+
+/* Legend chips that double as a filter (Rooms & Beds, Operations). */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.chip:hover { border-color: var(--color-ink-soft); }
+.chip:focus-visible, .chipClear:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+
+.chipActive {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-ink);
+}
+
+.chipCount {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+.chipSwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px 2px 5px 5px;
+  border: 1.5px solid currentColor;
+}
+
+.swatch-paid { color: var(--color-status-paid); }
+.swatch-due { color: var(--color-status-occupied); }
+.swatch-due-today { color: var(--color-brass-strong); background: var(--color-status-due-tint); }
+.swatch-late { color: var(--color-status-overdue); background: var(--color-status-overdue-tint); }
+.swatch-reserved { color: var(--color-status-booked); border-style: dashed; }
+.swatch-vacant { color: var(--color-status-vacant); border-style: dashed; }
+
+.chipClear {
+  background: none;
+  border: none;
+  font-size: var(--text-sm);
+  color: var(--color-teal);
+  text-decoration: underline;
+}
+
+.section {
+  margin-top: var(--space-6);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-3);
+}
+
+.panel {
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.panelTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-soft);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.muted {
+  font-size: var(--text-sm);
+  color: var(--color-ink-faint);
+}

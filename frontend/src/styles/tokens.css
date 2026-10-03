@@ -1,0 +1,131 @@
+/* Design token system — PG/rental back-office register.
+   Visual language: the property manager's ledger book, room key tags,
+   and rubber date-stamps — not a generic SaaS dashboard.
+   Signature element: status is always shown as a rotated ink-stamp badge,
+   used consistently across lead status, bed occupancy, and rent status. */
+
+:root {
+  /* Structural neutrals */
+  --color-ink:          #1F2A24;   /* ledger ink — primary text, dark chrome */
+  --color-ink-soft:     #45524B;   /* secondary text on paper */
+  --color-ink-faint:    #7C8880;   /* muted text, placeholders */
+  --color-paper:        #F1ECDD;   /* aged ledger paper — page background */
+  --color-paper-raised: #FBF8EF;   /* card surface, slightly lighter than page */
+  --color-rule:         #D9D2B8;   /* ruled-paper hairlines */
+  --color-rule-strong:  #C6BC9C;
+
+  /* Structural chrome (sidebar / topbar) */
+  --color-chrome:       #17231F;   /* near-black bottle green, ledger cover */
+  --color-chrome-raised:#20302A;
+  --color-chrome-text:  #E9E5D4;
+  --color-chrome-text-muted: #93A199;
+
+  /* Primary accent — teal, steel-almirah color, used for actions/links */
+  --color-teal:         #2F5D56;
+  --color-teal-strong:  #21453F;
+  --color-teal-tint:    #E1EAE6;
+
+  /* Signature accent — brass room-tag color, used sparingly for emphasis */
+  --color-brass:        #A97B2F;
+  --color-brass-strong: #8A6224;
+  --color-brass-tint:   #F3E6C8;
+
+  /* Status semantics — shared by lead status, bed occupancy, rent status */
+  --color-status-new:      #45607A; /* slate blue */
+  --color-status-visited:  #7A6A45; /* dim ochre */
+  --color-status-booked:   #2F5D56; /* teal */
+  --color-status-lost:     #7C8880; /* faded gray */
+  --color-status-vacant:   #7C8880;
+  --color-status-occupied: #2F5D56;
+  --color-status-paid:     #4C7A52; /* sage green */
+  --color-status-due:      #A97B2F; /* brass/ochre */
+  --color-status-overdue:  #A6402B; /* rust */
+  --color-status-overdue-tint: #F5E3DC;
+  --color-status-due-tint:     #F3E6C8;
+  --color-status-paid-tint:    #E3ECDF;
+
+  /* Dues-ageing ramp — one hue (rust), light→dark = older debt.
+     Validated with dataviz validate_palette.js --ordinal against --color-paper-raised. */
+  --color-age-1: #C06A4E;  /* 0–7 days */
+  --color-age-2: #A6402B;  /* 8–30 days */
+  --color-age-3: #6E2417;  /* 31+ days */
+
+  /* Typography */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body:    "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono:    "IBM Plex Mono", "Courier New", monospace;
+
+  --text-xs:   0.72rem;
+  --text-sm:   0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg:   1.0625rem;
+  --text-xl:   1.375rem;
+  --text-2xl:  1.875rem;
+  --text-3xl:  2.5rem;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight:  1.25;
+  --leading-normal: 1.55;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Radii — mostly square, ledger cards get a slight cut corner via clip-path, not rounding */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+
+  --shadow-card: 0 1px 2px rgba(23, 35, 31, 0.08), 0 1px 1px rgba(23, 35, 31, 0.05);
+  --shadow-raised: 0 4px 16px rgba(23, 35, 31, 0.14);
+
+  --sidebar-width: 216px;
+  --topbar-height: 60px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+table { border-collapse: collapse; width: 100%; }
+
+a { color: var(--color-teal); }
+
+::selection { background: var(--color-brass-tint); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

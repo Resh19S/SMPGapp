@@ -1,0 +1,83 @@
+.select {
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-raised);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 1px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.receipts {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.receipts li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  border-left: 2px solid var(--color-status-paid);
+  padding-left: var(--space-3);
+}
+
+.receiptName {
+  font-weight: var(--weight-medium);
+  display: flex;
+  flex-direction: column;
+}
+
+.receiptMeta {
+  font-weight: var(--weight-regular);
+  font-size: var(--text-xs);
+  color: var(--color-ink-faint);
+}
+
+.receiptAmount {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.notConnected {
+  border-style: dashed;
+  background: transparent;
+}
+
+@media (max-width: 1080px) {
+  .columns { grid-template-columns: 1fr; }
+}
+
+/* Previous selection's figures while the new month loads — no blank flash. */
+.stale {
+  opacity: 0.5;
+  transition: opacity 120ms ease;
+}

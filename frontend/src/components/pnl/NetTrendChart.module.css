@@ -1,0 +1,115 @@
+.wrap {
+  position: relative;
+}
+
+.columns {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+.baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-rule-strong);
+}
+
+/* The whole column slot is the hit target, not just the painted bar. */
+.slot {
+  position: relative;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.slot:hover,
+.slot:focus-visible { background: rgba(47, 93, 86, 0.05); }
+.slot:focus-visible { outline: 2px solid var(--color-teal); outline-offset: -2px; }
+
+.selected { background: rgba(169, 123, 47, 0.08); }
+
+.bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Rounded data-end, square at the baseline. */
+.profit { background: var(--color-teal); border-radius: 4px 4px 0 0; }
+.loss { background: var(--color-status-overdue); border-radius: 0 0 4px 4px; }
+
+.value {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.month {
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-ink-faint);
+  text-transform: uppercase;
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  pointer-events: none;
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.tooltip strong { color: var(--color-ink); font-size: var(--text-sm); }
+
+.tipTitle {
+  font-family: var(--font-mono);
+  color: var(--color-ink-faint);
+}
+
+.tipSub { color: var(--color-ink-faint); }
+
+.tableView {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-ink-soft);
+}
+
+.tableView summary {
+  cursor: pointer;
+  color: var(--color-teal);
+}
+
+.tableView table {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tableView th,
+.tableView td {
+  text-align: left;
+  padding: 2px var(--space-3) 2px 0;
+  border-bottom: 1px solid var(--color-rule);
+}
