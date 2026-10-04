@@ -28,15 +28,20 @@ access to it when you sign in with GitHub.
 
 ## 1. Neon: the database (3 min)
 1. https://neon.tech → **Sign up with GitHub**.
-2. **Create project:** name `sunrise-pg`, Postgres 16, region **AWS Asia
-   Pacific (Singapore)**.
-3. On the project dashboard, **Connect** → copy the **connection string**.
-   It looks like `postgresql://neondb_owner:…@ep-…-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`.
+2. **Create project** (any name). Region: **AWS US East 2 (Ohio)**. It must
+   match the Render region in `render.yaml` (`ohio`), because each page makes
+   many database queries and they must not cross the world. If you pick
+   another Neon region, change `region:` in `render.yaml` to the nearest
+   Render region (e.g. Singapore → `singapore`).
+3. On the project dashboard, **Connect** → turn **Connection pooling off**
+   → copy the **connection string**. It looks like
+   `postgresql://neondb_owner:…@ep-….us-east-2.aws.neon.tech/neondb?sslmode=require…`.
    Keep it private: it's the key to the data.
 
 ## 2. Render: the backend (5 min + ~4 min build)
 1. https://render.com → **Sign up with GitHub**.
-2. **New → Blueprint** → choose the `SMPGapp` repo. Render reads
+2. **New → Blueprint** → choose the `SMPGapp` repo. (Don't use Render's own
+   *Postgres*: its free database is deleted after 30 days. Neon's free one isn't.) Render reads
    `render.yaml` and shows one service, `sunrise-pg-api` (free).
 3. Fill in the values it asks for:
 
@@ -62,7 +67,11 @@ Start command and env vars exactly as in `render.yaml` (add
 ## 3. Vercel: the frontend (3 min)
 1. https://vercel.com → **Sign up with GitHub** → **Add New → Project** →
    import `SMPGapp`.
-2. **Root Directory:** `frontend` (click Edit). Framework is detected as Vite.
+2. Vercel detects two apps (backend + frontend) and offers "Services". Ignore
+   that: next to **frontend (Vite)** click **Import single project**. Root
+   Directory becomes `frontend`, Framework Vite. The backend stays on Render
+   (it needs a long-running server: the login lockout and session checks keep
+   state in memory, and Vercel's serverless functions don't).
 3. **Environment Variables:** `VITE_API_URL` = `https://sunrise-pg-api.onrender.com`
    (your Render address, **no trailing slash**). Don't set
    `VITE_SHOW_DEMO_LOGINS`.
