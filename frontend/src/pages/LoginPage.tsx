@@ -25,7 +25,13 @@ export function LoginPage() {
       const res = await login(username.trim(), password);
       setAuth(res.token, res.user);
     } catch (err) {
-      setError(err instanceof ApiError && err.status === 401 ? "Incorrect username or password." : "Could not reach the server. Is the backend running?");
+      // 401 wrong password, 429 locked out, 5xx server trouble: say what the server said.
+      // Only a request that never got an answer is "could not reach".
+      if (err instanceof ApiError) {
+        setError(err.status === 401 ? "Incorrect username or password." : err.message || "Sign-in failed. Please try again.");
+      } else {
+        setError("Could not reach the server. If it has been idle, it can take up to a minute to wake up. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
