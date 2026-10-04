@@ -4,7 +4,9 @@ import tempfile
 
 # Point the app at a throwaway database BEFORE anything imports `database`.
 _tmpdir = tempfile.mkdtemp(prefix="pg-rental-tests-")
-os.environ["DATABASE_URL"] = f"sqlite:///{_tmpdir}/test.db"
+# TEST_DATABASE_URL=postgresql://… runs the whole suite against PostgreSQL
+# (what production uses); default is a throwaway SQLite file.
+os.environ["DATABASE_URL"] = os.getenv("TEST_DATABASE_URL", f"sqlite:///{_tmpdir}/test.db")
 os.environ["APP_ENV"] = "test"
 
 import pytest  # noqa: E402

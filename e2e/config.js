@@ -6,6 +6,6 @@ module.exports = {
   API: process.env.E2E_API ?? "http://localhost:8765",
   CHROME: process.env.E2E_CHROME ?? undefined, // undefined = Playwright's own download
   OUT: process.env.E2E_OUT ?? path.join(__dirname, "output"),
-  OWNER: { username: "owner", password: "owner123" },
-  STAFF: { username: "staff", password: "staff123" },
+  OWNER: { username: "owner", password: process.env.E2E_OWNER_PASSWORD ?? "owner123" },
+  STAFF: { username: "staff", password: process.env.E2E_STAFF_PASSWORD ?? "staff123" },
 };

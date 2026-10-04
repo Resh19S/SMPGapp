@@ -9,6 +9,7 @@ leaving tomorrow, agreements coming up for renewal.
 """
 
 import datetime
+import os
 import random
 
 import clock
@@ -45,6 +46,12 @@ LAST_NAMES = [
 ]
 RENT_BY_FLOOR = {1: 9500, 2: 10500, 3: 12000}  # floor 3 has AC rooms
 
+# Demo passwords. On a public trial server set these as environment variables
+# so the well-known demo passwords don't work there.
+OWNER_PASSWORD = os.getenv("SEED_OWNER_PASSWORD", "owner123")
+STAFF_PASSWORD = os.getenv("SEED_STAFF_PASSWORD", "staff123")
+RAVI_PASSWORD = os.getenv("SEED_RAVI_PASSWORD", "ravi1234")
+
 
 def run():
     db = SessionLocal()
@@ -57,9 +64,9 @@ def run():
         today = clock.today()
         now = clock.utcnow()
 
-        owner = StaffUser(name="Property Owner", username="owner", password_hash=hash_password("owner123"), role="owner")
-        staff = StaffUser(name="Front Desk Staff", username="staff", password_hash=hash_password("staff123"), role="staff")
-        ravi = StaffUser(name="Ravi Pawar", username="ravi", password_hash=hash_password("ravi1234"), role="staff")
+        owner = StaffUser(name="Property Owner", username="owner", password_hash=hash_password(OWNER_PASSWORD), role="owner")
+        staff = StaffUser(name="Front Desk Staff", username="staff", password_hash=hash_password(STAFF_PASSWORD), role="staff")
+        ravi = StaffUser(name="Ravi Pawar", username="ravi", password_hash=hash_password(RAVI_PASSWORD), role="staff")
         db.add_all([owner, staff, ravi])
 
         prop = Property(name="Sunrise PG", address="14 MG Road, Pune, Maharashtra")
@@ -339,8 +346,9 @@ def run():
 
         db.commit()
         print(f"Seeded: 1 property, {len(beds)} beds, {len(tenants)} tenants, {len(complaints)} complaints, {len(leads_plan)} leads, and rent history.")
-        print("Login as owner:  username=owner  password=owner123")
-        print("Login as staff:  username=staff  password=staff123")
+        custom = "SEED_OWNER_PASSWORD" in os.environ
+        print("Login as owner:  username=owner  password=" + ("(from SEED_OWNER_PASSWORD)" if custom else OWNER_PASSWORD))
+        print("Login as staff:  username=staff  password=" + ("(from SEED_STAFF_PASSWORD)" if custom else STAFF_PASSWORD))
     finally:
         db.close()
 

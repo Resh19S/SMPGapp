@@ -47,6 +47,13 @@ script) is gitignored on purpose; never put client-confidential content in
 tracked files. CI (`.github/workflows/ci.yml`) runs backend tests, the
 frontend build and a contract-mirror check on every push.
 
+## Trial deployment (free)
+`docs/DEPLOY.md`: Vercel (frontend, `frontend/vercel.json`) + Render
+(backend, `render.yaml`) + Neon (PostgreSQL). The Render start command runs
+`seed.py` (idempotent) so the first boot creates tables + demo data; demo
+passwords come from `SEED_*_PASSWORD` env vars there. The backend suite also
+runs on PostgreSQL: `TEST_DATABASE_URL=postgresql://… .venv/bin/pytest` (and in CI).
+
 ## Production readiness
 `docs/ARCHITECTURE.md` is the plan for running this as a SaaS: booking-style
 concurrency rules (built + tested), PostgreSQL (not Cassandra), document

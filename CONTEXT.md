@@ -66,6 +66,12 @@ treat as the source of truth for v1 scope until superseded.
   future compliance concern, not a "no PII ever" project like the
   clinical one.
 
+**Update 2026-10-04 — free trial deployment:** the in-person demo became
+online, so the web app goes to a free public trial (Vercel + Render + Neon,
+`docs/DEPLOY.md`) with demo data and private passwords. This is a trial, not
+the paid go-live: real tenant data still waits for the client's decisions
+and the go-live list in `private/CLIENT_DECISIONS.md`.
+
 ## Mobile path (decide later, don't pre-build)
 Two realistic options once v1 web is validated:
 1. **PWA / Capacitor wrapper** around the same web app — cheaper,

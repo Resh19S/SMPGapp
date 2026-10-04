@@ -1,0 +1,35 @@
+# Render Blueprint — free trial deployment of the backend API.
+# Render dashboard → New → Blueprint → pick this repo. Fill the "sync: false"
+# values when prompted (see docs/DEPLOY.md).
+services:
+  - type: web
+    name: sunrise-pg-api
+    runtime: python
+    plan: free
+    region: singapore           # closest free region to India
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # seed.py creates the tables and demo data on the very first boot and does
+    # nothing afterwards (it skips if a property exists). --proxy-headers makes
+    # the login lockout see each visitor's real IP, not Render's proxy.
+    startCommand: python seed.py && uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: APP_ENV
+        value: production
+      - key: APP_TIMEZONE
+        value: Asia/Kolkata
+      - key: JWT_SECRET
+        generateValue: true     # random secret, created by Render
+      - key: DATABASE_URL
+        sync: false             # Neon connection string
+      - key: ALLOWED_ORIGINS
+        sync: false             # the Vercel address, e.g. https://sunrise-pg.vercel.app
+      - key: SEED_OWNER_PASSWORD
+        sync: false
+      - key: SEED_STAFF_PASSWORD
+        sync: false
+      - key: SEED_RAVI_PASSWORD
+        sync: false
