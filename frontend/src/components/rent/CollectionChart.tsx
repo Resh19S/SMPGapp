@@ -66,7 +66,8 @@ function MonthChart({ summary, period }: { summary: RentSummary; period: string 
   const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(p.day).toFixed(1)},${yScale(p.cumulative).toFixed(1)}`).join(" ");
   const last = points[points.length - 1];
   const areaPath = `${linePath} L${x(last.day).toFixed(1)},${yScale(0)} L${x(1)},${yScale(0)} Z`;
-  const yTicks = [0, yMax / 2, yMax].map((v) => Math.round(v / 1000) * 1000);
+  // Rounded to ₹1k; deduped because with no rent billed yet they all round to 0.
+  const yTicks = [...new Set([0, yMax / 2, yMax].map((v) => Math.round(v / 1000) * 1000))];
   const xTicks = [1, 8, 15, 22, daysInMonth];
   const hover = hoverIdx !== null ? points[hoverIdx] : null;
 

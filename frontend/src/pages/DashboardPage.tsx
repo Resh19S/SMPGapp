@@ -61,7 +61,9 @@ export function DashboardPage() {
           sub={
             summary.vacantBeds > 0
               ? `${summary.vacantBeds} empty · ${inrCompact(summary.vacantRentPerMonth)}/mo not coming in`
-              : `All ${summary.totalBeds} beds let`
+              : summary.totalBeds === 0
+                ? "No beds added yet"
+                : `All ${summary.totalBeds} beds let`
           }
         />
         <StatTile
