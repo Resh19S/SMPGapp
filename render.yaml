@@ -9,10 +9,11 @@ services:
     region: ohio                # same region as the Neon database (AWS us-east-2): the API makes many DB queries per page, so they must be close
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    # seed.py creates the tables and demo data on the very first boot and does
-    # nothing afterwards (it skips if a property exists). --proxy-headers makes
-    # the login lockout see each visitor's real IP, not Render's proxy.
-    startCommand: python seed.py && uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    # Real use: "manage.py init" creates missing tables and, on an empty
+    # database, the owner login from OWNER_* below. It never adds demo data and
+    # never touches existing data. (For a demo instead, swap in "python seed.py".)
+    # --proxy-headers makes the login lockout see each visitor's real IP.
+    startCommand: python manage.py init && uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
@@ -27,9 +28,9 @@ services:
         sync: false             # Neon connection string
       - key: ALLOWED_ORIGINS
         sync: false             # the Vercel address, e.g. https://sunrise-pg.vercel.app
-      - key: SEED_OWNER_PASSWORD
-        sync: false
-      - key: SEED_STAFF_PASSWORD
-        sync: false
-      - key: SEED_RAVI_PASSWORD
-        sync: false
+      - key: OWNER_PASSWORD
+        sync: false             # first owner login (8+ characters); only used while no owner exists
+      - key: OWNER_USERNAME
+        value: owner
+      - key: PROPERTY_NAME
+        sync: false             # optional: the building's name, created on an empty database

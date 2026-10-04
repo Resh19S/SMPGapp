@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ApiError, createBed, createBedsBulk, createProperty, listBeds, listProperties, updateBed } from "../api/client";
+import { ApiError, createBed, createBedsBulk, createProperty, listBeds, listProperties, updateBed, updateProperty } from "../api/client";
 import type { Bed, BedRentState, Property } from "../types/contract";
 import { BedGrid, RENT_STATE_LABEL, RENT_STATE_ORDER } from "../components/properties/BedGrid";
 import { BedFormModal } from "../components/properties/BedFormModal";
@@ -8,6 +8,8 @@ import { BulkBedsModal } from "../components/properties/BulkBedsModal";
 import { inr } from "../lib/format";
 import { usePropertyStore } from "../store/propertyStore";
 import { EditRentModal } from "../components/properties/EditRentModal";
+import { EditPropertyModal } from "../components/properties/EditPropertyModal";
+import { useAuthStore } from "../store/authStore";
 import formStyles from "../components/common/Form.module.css";
 import pageStyles from "./PageLayout.module.css";
 
@@ -20,6 +22,8 @@ export function PropertiesPage() {
   const focusRoom = searchParams.get("room");
   const setStoreProperty = usePropertyStore((s) => s.set);
   const [editingBed, setEditingBed] = useState<Bed | null>(null);
+  const [isEditingProperty, setIsEditingProperty] = useState(false);
+  const isOwner = useAuthStore((s) => s.user?.role === "owner");
   const [highlight, setHighlight] = useState<BedRentState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,6 +85,13 @@ export function PropertiesPage() {
     setBeds((prev) => [...prev, bed]);
   }
 
+  async function handleUpdateProperty(data: { name: string; address: string }) {
+    if (!property) return;
+    const updated = await updateProperty(property.id, data);
+    setProperty(updated);
+    setStoreProperty(updated);
+  }
+
   async function handleUpdateRent(bedId: number, rentAmount: number) {
     const updated = await updateBed(bedId, { rentAmount });
     setBeds((prev) => prev.map((b) => (b.id === bedId ? updated : b)));
@@ -119,7 +130,16 @@ export function PropertiesPage() {
         <div>
           <h1 className={pageStyles.title}>Rooms & Beds</h1>
           <p className={pageStyles.subtitle}>
-            {property.name} — {property.address}. Colour shows each bed's rent for this month; click a bed for details.
+            {property.name}{property.address ? ` — ${property.address}` : ""}
+            {isOwner && (
+              <>
+                {" "}
+                <button type="button" className={pageStyles.chipClear} onClick={() => setIsEditingProperty(true)}>
+                  Edit
+                </button>
+              </>
+            )}
+            . Colour shows each bed's rent for this month; click a bed for details.
           </p>
         </div>
         <div className={pageStyles.headerActions}>
@@ -166,6 +186,9 @@ export function PropertiesPage() {
 
       {isBedModalOpen && <BedFormModal onClose={() => setIsBedModalOpen(false)} onSubmit={handleAddBed} />}
       {isBulkOpen && <BulkBedsModal onClose={() => setIsBulkOpen(false)} onSubmit={handleAddBulk} />}
+      {isEditingProperty && (
+        <EditPropertyModal property={property} onClose={() => setIsEditingProperty(false)} onSubmit={handleUpdateProperty} />
+      )}
       {editingBed && (
         <EditRentModal
           bed={editingBed}

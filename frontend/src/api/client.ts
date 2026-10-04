@@ -25,6 +25,7 @@ import type {
   PaymentTransaction,
   ProfitAndLoss,
   Property,
+  UpdatePropertyRequest,
   RentRecord,
   RentSummary,
   StaffRef,
@@ -129,6 +130,10 @@ export function listProperties(): Promise<Property[]> {
 
 export function createProperty(data: { name: string; address: string }): Promise<Property> {
   return request("/properties", { method: "POST", body: JSON.stringify(data) });
+}
+
+export function updateProperty(id: number, data: UpdatePropertyRequest): Promise<Property> {
+  return request(`/properties/${id}`, { method: "PATCH", body: JSON.stringify(data) });
 }
 
 export function listBeds(propertyId?: number): Promise<Bed[]> {

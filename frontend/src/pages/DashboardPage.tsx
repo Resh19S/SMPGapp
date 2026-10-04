@@ -6,6 +6,7 @@ import { StatTile } from "../components/common/StatTile";
 import { StatusBadge, type BadgeTone } from "../components/common/StatusBadge";
 import { DuesAgeing } from "../components/dashboard/DuesAgeing";
 import { inr, inrCompact, relativeDay } from "../lib/format";
+import { useAuthStore } from "../store/authStore";
 import styles from "./DashboardPage.module.css";
 
 const TIER_STAMP: Record<DecisionItem["tier"], { tone: BadgeTone; label: string }> = {
@@ -47,9 +48,11 @@ export function DashboardPage() {
     <div>
       <p className={styles.eyebrow}>Day book</p>
       <h1 className={styles.pageTitle}>
-        {queue.length === 0 ? "All clear today" : `${queue.length} open item${queue.length === 1 ? "" : "s"} on today's page`}
+        {summary.totalBeds === 0 ? "Let's set up your PG" : queue.length === 0 ? "All clear today" : `${queue.length} open item${queue.length === 1 ? "" : "s"} on today's page`}
       </h1>
       <p className={styles.pageSubtitle}>Biggest rupee risk at the top. Paid-up rooms and routine work never make this list.</p>
+
+      {summary.totalBeds === 0 && <GettingStarted />}
 
       <div className={styles.tiles}>
         <StatTile
@@ -150,5 +153,35 @@ export function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** First-run checklist, shown until the first bed exists. Each step links to
+ * the page that does it; nothing here is stored. */
+function GettingStarted() {
+  const isOwner = useAuthStore((s) => s.user?.role === "owner");
+  return (
+    <section className={`${styles.panel} ${styles.setup}`}>
+      <h2 className={styles.panelTitle}>Getting started</h2>
+      <ol className={styles.setupSteps}>
+        <li>
+          <Link to="/properties">Rooms &amp; Beds</Link>: check your property name, then <strong>+ Add rooms</strong> (all
+          rooms of a floor at once, e.g. 101–110 with beds A, B, C).
+        </li>
+        <li>
+          <Link to="/tenants">Tenants</Link>: add each resident with <strong>+ Move in tenant</strong>, or bring them all in at
+          once with <strong>Import from Excel</strong>.
+        </li>
+        <li>
+          <Link to="/leads">Leads</Link>: note enquiries as they come in, so follow-ups don't slip.
+        </li>
+        {isOwner && (
+          <li>
+            <Link to="/staff">Staff Access</Link>: give your staff their own logins, and change your own password from
+            the <strong>Password</strong> button at the top right.
+          </li>
+        )}
+      </ol>
+    </section>
   );
 }

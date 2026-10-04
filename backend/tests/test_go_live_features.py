@@ -206,3 +206,31 @@ def test_edit_tenant_name_and_phone(client, owner, prop):
     assert client.patch(f"/tenants/{tenant['id']}", json={"name": None}, headers=owner).status_code == 422
     assert client.patch(f"/tenants/{tenant['id']}", json={"rentAmount": 1}, headers=owner).json()["rentAmount"] == 9500  # ignored
     assert client.patch("/tenants/999", json={"name": "X"}, headers=owner).status_code == 404
+
+
+# ---- Real-use start-up and property rename ----
+
+def test_init_creates_owner_and_property_from_env_once(client, monkeypatch):
+    monkeypatch.setenv("OWNER_PASSWORD", "real-owner-pass")
+    monkeypatch.setenv("OWNER_NAME", "Sonali")
+    monkeypatch.setenv("PROPERTY_NAME", "Shree Residency")
+    assert "created owner" in manage.init_from_env()
+    assert client.post("/auth/login", json={"username": "owner", "password": "real-owner-pass"}).status_code == 200
+    assert manage.init_from_env() == "already set up — nothing changed"
+    owner = login(client, "owner", "real-owner-pass")
+    assert client.get("/beds", headers=owner).json() == []  # no demo data
+    assert [p["name"] for p in client.get("/properties", headers=owner).json()] == ["Shree Residency"]
+
+
+def test_init_requires_owner_password(monkeypatch):
+    monkeypatch.delenv("OWNER_PASSWORD", raising=False)
+    with pytest.raises(manage.SetupError):
+        manage.init_from_env()
+
+
+def test_owner_renames_property_staff_cannot(client, owner, staff, prop):
+    res = client.patch(f"/properties/{prop['id']}", json={"name": "Shree Residency", "address": "Baner, Pune"}, headers=owner)
+    assert res.status_code == 200 and res.json()["name"] == "Shree Residency"
+    assert client.patch(f"/properties/{prop['id']}", json={"name": "X"}, headers=staff).status_code == 403
+    assert client.patch(f"/properties/{prop['id']}", json={"name": None}, headers=owner).status_code == 422
+    assert any(e["action"] == "property.updated" for e in client.get("/activity", headers=owner).json())

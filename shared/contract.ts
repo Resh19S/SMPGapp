@@ -25,6 +25,12 @@ export interface Property {
   address: string;
 }
 
+// PATCH /properties/{id} — owner only; omitted fields are left unchanged.
+export interface UpdatePropertyRequest {
+  name?: string;
+  address?: string;
+}
+
 export type BedStatus = "vacant" | "occupied";
 // Money state of a bed right now — "reserved" = tenant booked but not moved in yet.
 export type BedRentState = "vacant" | "reserved" | "paid" | "due" | "due-today" | "late";

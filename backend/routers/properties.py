@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 import audit
 import clock
 
-from auth import get_current_user
+from auth import get_current_user, require_owner
 from database import get_db
 from models.db_models import Bed, Property, StaffUser, Tenant
 from models.schemas import (
@@ -14,6 +14,7 @@ from models.schemas import (
     CreateBedRequest,
     CreatePropertyRequest,
     PropertyOut,
+    UpdatePropertyRequest,
     UpdateBedRequest,
 )
 from routers.payments import ensure_payments_up_to_date
@@ -45,6 +46,31 @@ def create_property(
     audit.record(db, user, "property.created", "property", prop.id, prop.name)
     db.commit()
     db.refresh(prop)
+    return prop
+
+
+@router.patch("/properties/{property_id}", response_model=PropertyOut)
+def update_property(
+    property_id: int,
+    request: UpdatePropertyRequest,
+    db: Session = Depends(get_db),
+    owner: StaffUser = Depends(require_owner),
+):
+    """Rename the building or fix its address (shown on receipts and the sidebar)."""
+    prop = db.get(Property, property_id)
+    if prop is None:
+        raise HTTPException(status_code=404, detail="Property not found")
+    changes = []
+    if request.name is not None and request.name != prop.name:
+        changes.append(f"name {prop.name} → {request.name}")
+        prop.name = request.name
+    if request.address is not None and request.address != prop.address:
+        changes.append("address changed")
+        prop.address = request.address
+    if changes:
+        audit.record(db, owner, "property.updated", "property", prop.id, "; ".join(changes))
+        db.commit()
+        db.refresh(prop)
     return prop
 
 

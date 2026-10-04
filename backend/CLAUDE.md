@@ -76,7 +76,8 @@ list. Rent under 30 days late rolls up into one line so it can't bury
 everything else; add new item kinds there rather than new dashboard fields.
 
 ## Go-live helpers
-`manage.py create-owner|create-property` (live servers — never `seed.py`).
+`manage.py init|create-owner|create-property` (live servers — never `seed.py`;
+`init` is Render's start command), `PATCH /properties/{id}` (owner renames the building).
 `POST /beds/bulk` (all-or-nothing rooms × labels), `POST /tenants/import`
 (CSV rows validated per row, `dryRun` then all-or-nothing),
 `PATCH /tenants/{id}` (name/phone only — money terms change via renewal or

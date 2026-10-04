@@ -122,6 +122,16 @@ class CreatePropertyRequest(BaseModel):
     address: Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)] = ""
 
 
+class UpdatePropertyRequest(BaseModel):
+    name: Optional[Name] = None
+    address: Optional[Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)]] = None
+
+    @model_validator(mode="after")
+    def _no_nulls(self):
+        _reject_explicit_nulls(self, ("name", "address"))
+        return self
+
+
 class BedTenantRef(BaseModel):
     id: int
     name: str

@@ -49,9 +49,10 @@ frontend build and a contract-mirror check on every push.
 
 ## Trial deployment (free)
 `docs/DEPLOY.md`: Vercel (frontend, `frontend/vercel.json`) + Render
-(backend, `render.yaml`) + Neon (PostgreSQL). The Render start command runs
-`seed.py` (idempotent) so the first boot creates tables + demo data; demo
-passwords come from `SEED_*_PASSWORD` env vars there. The backend suite also
+(backend, `render.yaml`) + Neon (PostgreSQL). The live site is in **real use**
+by the client (since 2026-10-04): the Render start command is
+`manage.py init` (tables + first owner from `OWNER_PASSWORD`, never demo
+data). Never reset the Neon database or run `seed.py` against it now. The backend suite also
 runs on PostgreSQL: `TEST_DATABASE_URL=postgresql://… .venv/bin/pytest` (and in CI).
 
 ## Production readiness
@@ -108,4 +109,4 @@ npm run dev
 Demo logins (from `seed.py`): `owner` / `owner123` (owner role),
 `staff` / `staff123` and `ravi` / `ravi1234` (staff role). They're shown on
 the sign-in page only if `VITE_SHOW_DEMO_LOGINS=true`. On a live server
-never run `seed.py`; use `backend/manage.py create-owner` / `create-property`.
+never run `seed.py`; use `backend/manage.py init` / `create-owner` / `create-property`.

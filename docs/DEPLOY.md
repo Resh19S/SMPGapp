@@ -1,7 +1,7 @@
 # Free trial deployment — Vercel + Render + Neon
 
-**Who it's for:** giving the client a live link to try the app with demo
-data. Cost ₹0. One-time setup about 15–20 minutes; afterwards every
+**Who it's for:** giving the client a live link to the app (first with demo
+data, then switched to real use, see "Switch from demo to real use" below). Cost ₹0. One-time setup about 15–20 minutes; afterwards every
 `git push` redeploys automatically.
 
 | Part | Service (free plan) | Address you'll get |
@@ -110,11 +110,27 @@ plan's 750 hours/month covers one service running all month.
 **Update the app:** commit and `git push`. Vercel and Render both redeploy
 (Render takes ~3–4 min).
 
-**Reset to fresh demo data** (e.g. before a second demo):
-1. Neon → **SQL Editor** → run
-   `DROP SCHEMA public CASCADE; CREATE SCHEMA public;`
-2. Render → **Manual Deploy → Restart service**. The start command
-   re-creates the tables and demo data.
+**Switch from demo to real use (one time, done 2026-10-04).** This wipes
+everything, so only do it while the data is still demo data.
+1. Push the commit whose `render.yaml` start command is
+   `python manage.py init && uvicorn …` (not `seed.py`). In Render →
+   service → **Settings → Start Command**, check it says that. Blueprint
+   services usually pick it up; if not, paste it in.
+2. Render → **Environment**: add `OWNER_PASSWORD` (8+ characters: what she
+   will sign in with), `OWNER_USERNAME` = `owner`, and optionally
+   `PROPERTY_NAME` (her building's name). The `SEED_*` variables can be deleted.
+3. Neon → **SQL Editor** → run `DROP SCHEMA public CASCADE; CREATE SCHEMA public;`
+4. Render → **Manual Deploy → Restart service**. The log shows
+   `Setup: created owner 'owner'`. She signs in and the Day Book shows a
+   *Getting started* list.
+
+From then on the start command only says `already set up — nothing changed`.
+**Never run step 3 again**: it deletes her residents and payments. Neon's
+free plan keeps only a short history, so ask her to use **Export to Excel**
+(Tenants, Rent Tracker) weekly as a backup.
+
+**Demo data on a separate copy:** use a second Neon project + Render
+service with the start command `python seed.py && uvicorn …`.
 
 **Logs:** Render → service → **Logs**. Errors are also on the Activity page
 (failed sign-ins).
